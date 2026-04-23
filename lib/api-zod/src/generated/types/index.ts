@@ -19,6 +19,8 @@ export * from "./leaderboardEntry";
 export * from "./loginBody";
 export * from "./match";
 export * from "./matchDetails";
+export * from "./matchHistoryEntry";
+export * from "./matchHistoryEntryType";
 export * from "./matchParticipant";
 export * from "./matchStatus";
 export * from "./matchType";

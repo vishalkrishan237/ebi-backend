@@ -50,6 +50,9 @@ export function Navbar() {
             <Link href="/leaderboard" className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
               Leaderboard
             </Link>
+            <Link href="/history" className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+              History
+            </Link>
             {me?.user && (
               <>
                 <Link href="/profile" className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
@@ -110,6 +113,9 @@ export function Navbar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/leaderboard" className="cursor-pointer w-full">Leaderboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/history" className="cursor-pointer w-full">Match History</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="cursor-pointer w-full">Profile</Link>

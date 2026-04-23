@@ -139,6 +139,28 @@ export interface Profile {
   joinedMatches: JoinedMatchSummary[];
 }
 
+export type MatchHistoryEntryType =
+  (typeof MatchHistoryEntryType)[keyof typeof MatchHistoryEntryType];
+
+export const MatchHistoryEntryType = {
+  paid: "paid",
+  free: "free",
+} as const;
+
+export interface MatchHistoryEntry {
+  id: number;
+  name: string;
+  type: MatchHistoryEntryType;
+  entryFee: number;
+  prize: number;
+  slots: number;
+  slotsTaken: number;
+  winnerUserId: number | null;
+  winnerUsername: string | null;
+  winnerFreeFireUid: string | null;
+  startsAt: string;
+}
+
 export interface LeaderboardEntry {
   rank: number;
   userId: number;

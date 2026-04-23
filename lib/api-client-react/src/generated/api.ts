@@ -26,6 +26,7 @@ import type {
   LoginBody,
   Match,
   MatchDetails,
+  MatchHistoryEntry,
   MeResponse,
   Profile,
   SignupBody,
@@ -891,6 +892,81 @@ export function useGetProfile<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetProfileQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List completed matches with winners
+ */
+export const getGetMatchHistoryUrl = () => {
+  return `/api/matches/history`;
+};
+
+export const getMatchHistory = async (
+  options?: RequestInit,
+): Promise<MatchHistoryEntry[]> => {
+  return customFetch<MatchHistoryEntry[]>(getGetMatchHistoryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMatchHistoryQueryKey = () => {
+  return [`/api/matches/history`] as const;
+};
+
+export const getGetMatchHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMatchHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMatchHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMatchHistoryQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMatchHistory>>> = ({
+    signal,
+  }) => getMatchHistory({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMatchHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMatchHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMatchHistory>>
+>;
+export type GetMatchHistoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List completed matches with winners
+ */
+
+export function useGetMatchHistory<
+  TData = Awaited<ReturnType<typeof getMatchHistory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMatchHistory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMatchHistoryQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

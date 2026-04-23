@@ -182,6 +182,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Profile"
+  /matches/history:
+    get:
+      operationId: getMatchHistory
+      tags: [matches]
+      summary: List completed matches with winners
+      responses:
+        "200":
+          description: Match history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatchHistoryEntry"
   /leaderboard:
     get:
       operationId: getLeaderboard
@@ -389,6 +403,39 @@ components:
           items:
             $ref: "#/components/schemas/JoinedMatchSummary"
       required: [user, joinedMatches]
+    MatchHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+        prize:
+          type: integer
+        slots:
+          type: integer
+        slotsTaken:
+          type: integer
+        winnerUserId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        winnerUsername:
+          oneOf:
+            - type: string
+            - type: "null"
+        winnerFreeFireUid:
+          oneOf:
+            - type: string
+            - type: "null"
+        startsAt:
+          type: string
+      required: [id, name, type, entryFee, prize, slots, slotsTaken, winnerUserId, winnerUsername, winnerFreeFireUid, startsAt]
     LeaderboardEntry:
       type: object
       properties:

@@ -226,6 +226,24 @@ export const GetProfileResponse = zod.object({
 });
 
 /**
+ * @summary List completed matches with winners
+ */
+export const GetMatchHistoryResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  type: zod.enum(["paid", "free"]),
+  entryFee: zod.number(),
+  prize: zod.number(),
+  slots: zod.number(),
+  slotsTaken: zod.number(),
+  winnerUserId: zod.union([zod.number(), zod.null()]),
+  winnerUsername: zod.union([zod.string(), zod.null()]),
+  winnerFreeFireUid: zod.union([zod.string(), zod.null()]),
+  startsAt: zod.string(),
+});
+export const GetMatchHistoryResponse = zod.array(GetMatchHistoryResponseItem);
+
+/**
  * @summary Top players ranked by tournament wins
  */
 export const GetLeaderboardResponseItem = zod.object({
