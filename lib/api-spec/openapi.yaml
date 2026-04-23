@@ -182,6 +182,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Profile"
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [matches]
+      summary: Top players ranked by tournament wins
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
   /rewards:
     get:
       operationId: getRewards
@@ -375,6 +389,24 @@ components:
           items:
             $ref: "#/components/schemas/JoinedMatchSummary"
       required: [user, joinedMatches]
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        freeFireUid:
+          type: string
+        wins:
+          type: integer
+        totalPrize:
+          type: integer
+        coinBalance:
+          type: integer
+      required: [rank, userId, username, freeFireUid, wins, totalPrize, coinBalance]
     CoinTransaction:
       type: object
       properties:

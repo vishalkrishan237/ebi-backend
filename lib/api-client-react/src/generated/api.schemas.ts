@@ -139,6 +139,16 @@ export interface Profile {
   joinedMatches: JoinedMatchSummary[];
 }
 
+export interface LeaderboardEntry {
+  rank: number;
+  userId: number;
+  username: string;
+  freeFireUid: string;
+  wins: number;
+  totalPrize: number;
+  coinBalance: number;
+}
+
 export interface CoinTransaction {
   id: number;
   /** Positive for earnings, negative for spending */

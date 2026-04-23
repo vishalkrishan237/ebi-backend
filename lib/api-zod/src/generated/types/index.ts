@@ -15,6 +15,7 @@ export * from "./joinedMatchSummary";
 export * from "./joinedMatchSummaryStatus";
 export * from "./joinedMatchSummaryType";
 export * from "./joinResponse";
+export * from "./leaderboardEntry";
 export * from "./loginBody";
 export * from "./match";
 export * from "./matchDetails";

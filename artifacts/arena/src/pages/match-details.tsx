@@ -15,7 +15,7 @@ export default function MatchDetailsPage() {
   const params = useParams();
   const matchId = Number(params.id);
   const { data: me } = useGetMe();
-  const { data: match, isLoading } = useGetMatch(matchId, { query: { enabled: !!matchId } });
+  const { data: match, isLoading } = useGetMatch(matchId, { query: { enabled: !!matchId, queryKey: getGetMatchQueryKey(matchId) } });
   const joinMutation = useJoinMatch();
   const queryClient = useQueryClient();
   const { toast } = useToast();

@@ -226,6 +226,20 @@ export const GetProfileResponse = zod.object({
 });
 
 /**
+ * @summary Top players ranked by tournament wins
+ */
+export const GetLeaderboardResponseItem = zod.object({
+  rank: zod.number(),
+  userId: zod.number(),
+  username: zod.string(),
+  freeFireUid: zod.string(),
+  wins: zod.number(),
+  totalPrize: zod.number(),
+  coinBalance: zod.number(),
+});
+export const GetLeaderboardResponse = zod.array(GetLeaderboardResponseItem);
+
+/**
  * @summary Coin transaction history
  */
 export const GetRewardsResponseItem = zod.object({

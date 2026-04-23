@@ -25,7 +25,7 @@ export default function AdminPage() {
   
   const [selectedMatchId, setSelectedMatchId] = useState<string>("");
   const { data: selectedMatchDetails } = useGetMatch(Number(selectedMatchId), {
-    query: { enabled: !!selectedMatchId }
+    query: { enabled: !!selectedMatchId, queryKey: getGetMatchQueryKey(Number(selectedMatchId)) }
   });
 
   const createForm = useForm({

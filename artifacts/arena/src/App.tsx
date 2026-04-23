@@ -11,6 +11,7 @@ import LobbyPage from "@/pages/lobby";
 import MatchDetailsPage from "@/pages/match-details";
 import ProfilePage from "@/pages/profile";
 import RewardsPage from "@/pages/rewards";
+import LeaderboardPage from "@/pages/leaderboard";
 import AdminPage from "@/pages/admin";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ function Router() {
         <Route path="/matches/:id" component={MatchDetailsPage} />
         <Route path="/profile" component={ProfilePage} />
         <Route path="/rewards" component={RewardsPage} />
+        <Route path="/leaderboard" component={LeaderboardPage} />
         <Route path="/admin" component={AdminPage} />
         <Route component={NotFound} />
       </Switch>
