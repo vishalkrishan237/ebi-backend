@@ -18,6 +18,8 @@ import type {
 
 import type {
   CoinTransaction,
+  Coupon,
+  CouponOption,
   CreateMatchBody,
   DeclareWinnerBody,
   HealthStatus,
@@ -29,6 +31,7 @@ import type {
   MatchHistoryEntry,
   MeResponse,
   Profile,
+  RedeemCouponBody,
   SignupBody,
   User,
 } from "./api.schemas";
@@ -974,6 +977,222 @@ export function useGetMatchHistory<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+export const getGetCouponOptionsUrl = () => {
+  return `/api/coupons/options`;
+};
+
+export const getCouponOptions = async (
+  options?: RequestInit,
+): Promise<CouponOption[]> => {
+  return customFetch<CouponOption[]>(getGetCouponOptionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCouponOptionsQueryKey = () => {
+  return [`/api/coupons/options`] as const;
+};
+
+export const getGetCouponOptionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCouponOptions>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCouponOptions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCouponOptionsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCouponOptions>>
+  > = ({ signal }) => getCouponOptions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCouponOptions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCouponOptionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCouponOptions>>
+>;
+export type GetCouponOptionsQueryError = ErrorType<unknown>;
+
+export function useGetCouponOptions<
+  TData = Awaited<ReturnType<typeof getCouponOptions>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCouponOptions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCouponOptionsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getGetMyCouponsUrl = () => {
+  return `/api/coupons`;
+};
+
+export const getMyCoupons = async (
+  options?: RequestInit,
+): Promise<Coupon[]> => {
+  return customFetch<Coupon[]>(getGetMyCouponsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyCouponsQueryKey = () => {
+  return [`/api/coupons`] as const;
+};
+
+export const getGetMyCouponsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyCoupons>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyCoupons>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyCouponsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyCoupons>>> = ({
+    signal,
+  }) => getMyCoupons({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyCoupons>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyCouponsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyCoupons>>
+>;
+export type GetMyCouponsQueryError = ErrorType<unknown>;
+
+export function useGetMyCoupons<
+  TData = Awaited<ReturnType<typeof getMyCoupons>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyCoupons>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyCouponsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getRedeemCouponUrl = () => {
+  return `/api/coupons/redeem`;
+};
+
+export const redeemCoupon = async (
+  redeemCouponBody: RedeemCouponBody,
+  options?: RequestInit,
+): Promise<Coupon> => {
+  return customFetch<Coupon>(getRedeemCouponUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(redeemCouponBody),
+  });
+};
+
+export const getRedeemCouponMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof redeemCoupon>>,
+    TError,
+    { data: BodyType<RedeemCouponBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof redeemCoupon>>,
+  TError,
+  { data: BodyType<RedeemCouponBody> },
+  TContext
+> => {
+  const mutationKey = ["redeemCoupon"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof redeemCoupon>>,
+    { data: BodyType<RedeemCouponBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return redeemCoupon(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RedeemCouponMutationResult = NonNullable<
+  Awaited<ReturnType<typeof redeemCoupon>>
+>;
+export type RedeemCouponMutationBody = BodyType<RedeemCouponBody>;
+export type RedeemCouponMutationError = ErrorType<unknown>;
+
+export const useRedeemCoupon = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof redeemCoupon>>,
+    TError,
+    { data: BodyType<RedeemCouponBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof redeemCoupon>>,
+  TError,
+  { data: BodyType<RedeemCouponBody> },
+  TContext
+> => {
+  return useMutation(getRedeemCouponMutationOptions(options));
+};
 
 /**
  * @summary Top players ranked by tournament wins

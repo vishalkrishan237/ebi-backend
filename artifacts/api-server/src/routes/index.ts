@@ -5,6 +5,7 @@ import matchesRouter from "./matches";
 import profileRouter from "./profile";
 import rewardsRouter from "./rewards";
 import leaderboardRouter from "./leaderboard";
+import couponsRouter from "./coupons";
 import matchHistoryRouter from "./match-history";
 
 const router: IRouter = Router();
@@ -16,5 +17,6 @@ router.use(matchesRouter);
 router.use(profileRouter);
 router.use(rewardsRouter);
 router.use(leaderboardRouter);
+router.use(couponsRouter);
 
 export default router;

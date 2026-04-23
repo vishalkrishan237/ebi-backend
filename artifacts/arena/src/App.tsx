@@ -13,6 +13,7 @@ import ProfilePage from "@/pages/profile";
 import RewardsPage from "@/pages/rewards";
 import LeaderboardPage from "@/pages/leaderboard";
 import HistoryPage from "@/pages/history";
+import CouponsPage from "@/pages/coupons";
 import AdminPage from "@/pages/admin";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ function Router() {
         <Route path="/rewards" component={RewardsPage} />
         <Route path="/leaderboard" component={LeaderboardPage} />
         <Route path="/history" component={HistoryPage} />
+        <Route path="/coupons" component={CouponsPage} />
         <Route path="/admin" component={AdminPage} />
         <Route component={NotFound} />
       </Switch>

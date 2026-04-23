@@ -53,6 +53,9 @@ export function Navbar() {
             <Link href="/history" className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
               History
             </Link>
+            <Link href="/coupons" className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+              Coupons
+            </Link>
             {me?.user && (
               <>
                 <Link href="/profile" className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
@@ -122,6 +125,9 @@ export function Navbar() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/rewards" className="cursor-pointer w-full">Rewards</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/coupons" className="cursor-pointer w-full">Coupons</Link>
                   </DropdownMenuItem>
                   {me.user.isAdmin && (
                     <DropdownMenuItem asChild>

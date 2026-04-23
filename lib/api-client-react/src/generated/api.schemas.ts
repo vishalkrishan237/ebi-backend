@@ -161,6 +161,24 @@ export interface MatchHistoryEntry {
   startsAt: string;
 }
 
+export interface CouponOption {
+  coinCost: number;
+  valueInr: number;
+}
+
+export interface Coupon {
+  id: number;
+  code: string;
+  coinCost: number;
+  valueInr: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface RedeemCouponBody {
+  coinCost: number;
+}
+
 export interface LeaderboardEntry {
   rank: number;
   userId: number;

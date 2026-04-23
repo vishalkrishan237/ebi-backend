@@ -196,6 +196,49 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MatchHistoryEntry"
+  /coupons/options:
+    get:
+      operationId: getCouponOptions
+      tags: [coupons]
+      responses:
+        "200":
+          description: Available coupon bundles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CouponOption"
+  /coupons:
+    get:
+      operationId: getMyCoupons
+      tags: [coupons]
+      responses:
+        "200":
+          description: User redeemed coupons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Coupon"
+  /coupons/redeem:
+    post:
+      operationId: redeemCoupon
+      tags: [coupons]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RedeemCouponBody"
+      responses:
+        "200":
+          description: Redeemed coupon
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Coupon"
   /leaderboard:
     get:
       operationId: getLeaderboard
@@ -436,6 +479,36 @@ components:
         startsAt:
           type: string
       required: [id, name, type, entryFee, prize, slots, slotsTaken, winnerUserId, winnerUsername, winnerFreeFireUid, startsAt]
+    CouponOption:
+      type: object
+      properties:
+        coinCost:
+          type: integer
+        valueInr:
+          type: integer
+      required: [coinCost, valueInr]
+    Coupon:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        coinCost:
+          type: integer
+        valueInr:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+      required: [id, code, coinCost, valueInr, status, createdAt]
+    RedeemCouponBody:
+      type: object
+      properties:
+        coinCost:
+          type: integer
+      required: [coinCost]
     LeaderboardEntry:
       type: object
       properties:

@@ -7,6 +7,8 @@
  */
 
 export * from "./coinTransaction";
+export * from "./coupon";
+export * from "./couponOption";
 export * from "./createMatchBody";
 export * from "./createMatchBodyType";
 export * from "./declareWinnerBody";
@@ -26,5 +28,6 @@ export * from "./matchStatus";
 export * from "./matchType";
 export * from "./meResponse";
 export * from "./profile";
+export * from "./redeemCouponBody";
 export * from "./signupBody";
 export * from "./user";

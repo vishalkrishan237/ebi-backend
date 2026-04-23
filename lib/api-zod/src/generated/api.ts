@@ -243,6 +243,35 @@ export const GetMatchHistoryResponseItem = zod.object({
 });
 export const GetMatchHistoryResponse = zod.array(GetMatchHistoryResponseItem);
 
+export const GetCouponOptionsResponseItem = zod.object({
+  coinCost: zod.number(),
+  valueInr: zod.number(),
+});
+export const GetCouponOptionsResponse = zod.array(GetCouponOptionsResponseItem);
+
+export const GetMyCouponsResponseItem = zod.object({
+  id: zod.number(),
+  code: zod.string(),
+  coinCost: zod.number(),
+  valueInr: zod.number(),
+  status: zod.string(),
+  createdAt: zod.string(),
+});
+export const GetMyCouponsResponse = zod.array(GetMyCouponsResponseItem);
+
+export const RedeemCouponBody = zod.object({
+  coinCost: zod.number(),
+});
+
+export const RedeemCouponResponse = zod.object({
+  id: zod.number(),
+  code: zod.string(),
+  coinCost: zod.number(),
+  valueInr: zod.number(),
+  status: zod.string(),
+  createdAt: zod.string(),
+});
+
 /**
  * @summary Top players ranked by tournament wins
  */
