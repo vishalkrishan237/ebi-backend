@@ -20,9 +20,11 @@ import type {
   CoinTransaction,
   Coupon,
   CouponOption,
+  CouponPreview,
   CreateMatchBody,
   DeclareWinnerBody,
   HealthStatus,
+  JoinMatchBody,
   JoinResponse,
   LeaderboardEntry,
   LoginBody,
@@ -30,6 +32,7 @@ import type {
   MatchDetails,
   MatchHistoryEntry,
   MeResponse,
+  PreviewCouponBody,
   Profile,
   RedeemCouponBody,
   SignupBody,
@@ -677,11 +680,14 @@ export const getJoinMatchUrl = (id: number) => {
 
 export const joinMatch = async (
   id: number,
+  joinMatchBody?: JoinMatchBody,
   options?: RequestInit,
 ): Promise<JoinResponse> => {
   return customFetch<JoinResponse>(getJoinMatchUrl(id), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(joinMatchBody),
   });
 };
 
@@ -692,14 +698,14 @@ export const getJoinMatchMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof joinMatch>>,
     TError,
-    { id: number },
+    { id: number; data: BodyType<JoinMatchBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof joinMatch>>,
   TError,
-  { id: number },
+  { id: number; data: BodyType<JoinMatchBody> },
   TContext
 > => {
   const mutationKey = ["joinMatch"];
@@ -713,11 +719,11 @@ export const getJoinMatchMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof joinMatch>>,
-    { id: number }
+    { id: number; data: BodyType<JoinMatchBody> }
   > = (props) => {
-    const { id } = props ?? {};
+    const { id, data } = props ?? {};
 
-    return joinMatch(id, requestOptions);
+    return joinMatch(id, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -726,7 +732,7 @@ export const getJoinMatchMutationOptions = <
 export type JoinMatchMutationResult = NonNullable<
   Awaited<ReturnType<typeof joinMatch>>
 >;
-
+export type JoinMatchMutationBody = BodyType<JoinMatchBody>;
 export type JoinMatchMutationError = ErrorType<unknown>;
 
 export const useJoinMatch = <
@@ -736,17 +742,97 @@ export const useJoinMatch = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof joinMatch>>,
     TError,
-    { id: number },
+    { id: number; data: BodyType<JoinMatchBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof joinMatch>>,
   TError,
-  { id: number },
+  { id: number; data: BodyType<JoinMatchBody> },
   TContext
 > => {
   return useMutation(getJoinMatchMutationOptions(options));
+};
+
+export const getPreviewCouponUrl = () => {
+  return `/api/coupons/preview`;
+};
+
+export const previewCoupon = async (
+  previewCouponBody: PreviewCouponBody,
+  options?: RequestInit,
+): Promise<CouponPreview> => {
+  return customFetch<CouponPreview>(getPreviewCouponUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(previewCouponBody),
+  });
+};
+
+export const getPreviewCouponMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewCoupon>>,
+    TError,
+    { data: BodyType<PreviewCouponBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof previewCoupon>>,
+  TError,
+  { data: BodyType<PreviewCouponBody> },
+  TContext
+> => {
+  const mutationKey = ["previewCoupon"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof previewCoupon>>,
+    { data: BodyType<PreviewCouponBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return previewCoupon(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PreviewCouponMutationResult = NonNullable<
+  Awaited<ReturnType<typeof previewCoupon>>
+>;
+export type PreviewCouponMutationBody = BodyType<PreviewCouponBody>;
+export type PreviewCouponMutationError = ErrorType<unknown>;
+
+export const usePreviewCoupon = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewCoupon>>,
+    TError,
+    { data: BodyType<PreviewCouponBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof previewCoupon>>,
+  TError,
+  { data: BodyType<PreviewCouponBody> },
+  TContext
+> => {
+  return useMutation(getPreviewCouponMutationOptions(options));
 };
 
 export const getDeclareWinnerUrl = (id: number) => {

@@ -175,6 +175,20 @@ export interface Coupon {
   createdAt: string;
 }
 
+export interface JoinMatchBody {
+  couponCode?: string;
+}
+
+export interface PreviewCouponBody {
+  code: string;
+}
+
+export interface CouponPreview {
+  code: string;
+  valueInr: number;
+  status: string;
+}
+
 export interface RedeemCouponBody {
   coinCost: number;
 }

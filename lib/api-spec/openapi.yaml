@@ -140,6 +140,12 @@ paths:
           required: true
           schema:
             type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinMatchBody"
       responses:
         "200":
           description: Joined
@@ -147,6 +153,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/JoinResponse"
+  /coupons/preview:
+    post:
+      operationId: previewCoupon
+      tags: [coupons]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreviewCouponBody"
+      responses:
+        "200":
+          description: Coupon preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CouponPreview"
   /matches/{id}/declare-winner:
     post:
       operationId: declareWinner
@@ -503,6 +526,27 @@ components:
         createdAt:
           type: string
       required: [id, code, coinCost, valueInr, status, createdAt]
+    JoinMatchBody:
+      type: object
+      properties:
+        couponCode:
+          type: string
+    PreviewCouponBody:
+      type: object
+      properties:
+        code:
+          type: string
+      required: [code]
+    CouponPreview:
+      type: object
+      properties:
+        code:
+          type: string
+        valueInr:
+          type: integer
+        status:
+          type: string
+      required: [code, valueInr, status]
     RedeemCouponBody:
       type: object
       properties:

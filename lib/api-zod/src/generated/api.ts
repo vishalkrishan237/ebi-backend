@@ -160,6 +160,10 @@ export const JoinMatchParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const JoinMatchBody = zod.object({
+  couponCode: zod.string().optional(),
+});
+
 export const JoinMatchResponse = zod.object({
   match: zod.object({
     id: zod.number(),
@@ -175,6 +179,16 @@ export const JoinMatchResponse = zod.object({
     createdAt: zod.string(),
   }),
   coinBalance: zod.number(),
+});
+
+export const PreviewCouponBody = zod.object({
+  code: zod.string(),
+});
+
+export const PreviewCouponResponse = zod.object({
+  code: zod.string(),
+  valueInr: zod.number(),
+  status: zod.string(),
 });
 
 export const DeclareWinnerParams = zod.object({

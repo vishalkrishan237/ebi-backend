@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "wouter";
-import { useGetMatch, useJoinMatch, useGetMe, getGetMatchQueryKey, getGetMeQueryKey, getListMatchesQueryKey, getGetProfileQueryKey, getGetRewardsQueryKey } from "@workspace/api-client-react";
+import { useGetMatch, useJoinMatch, useGetMe, usePreviewCoupon, getGetMatchQueryKey, getGetMeQueryKey, getListMatchesQueryKey, getGetProfileQueryKey, getGetRewardsQueryKey, getGetMyCouponsQueryKey, type CouponPreview } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Coins, Users, Calendar, ArrowLeft, Loader2, Sword, Clock } from "lucide-react";
+import { Trophy, Coins, Users, Calendar, ArrowLeft, Loader2, Sword, Ticket, X, Check, IndianRupee } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -17,8 +18,11 @@ export default function MatchDetailsPage() {
   const { data: me } = useGetMe();
   const { data: match, isLoading } = useGetMatch(matchId, { query: { enabled: !!matchId, queryKey: getGetMatchQueryKey(matchId) } });
   const joinMutation = useJoinMatch();
+  const previewMutation = usePreviewCoupon();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponPreview | null>(null);
 
   if (isLoading) {
     return (
@@ -39,7 +43,39 @@ export default function MatchDetailsPage() {
 
   const isFull = match.slotsTaken >= match.slots;
   const isCompleted = match.status === "completed";
-  const canJoin = !match.joinedByMe && !isFull && !isCompleted;
+  const isPaid = match.type === "paid" && match.entryFee > 0;
+  const discount = appliedCoupon ? Math.min(appliedCoupon.valueInr, match.entryFee) : 0;
+  const finalFee = Math.max(0, match.entryFee - discount);
+
+  const handleApplyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      toast({ variant: "destructive", title: "Enter a code", description: "Type your coupon code first." });
+      return;
+    }
+    previewMutation.mutate(
+      { data: { code } },
+      {
+        onSuccess: (preview) => {
+          setAppliedCoupon(preview);
+          toast({ title: "Coupon applied", description: `₹${preview.valueInr} off your entry fee.` });
+        },
+        onError: (err: any) => {
+          setAppliedCoupon(null);
+          toast({
+            variant: "destructive",
+            title: "Coupon invalid",
+            description: err?.response?.data?.error ?? "Could not apply that code.",
+          });
+        },
+      },
+    );
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+  };
 
   const handleJoin = () => {
     if (!me?.user) {
@@ -48,27 +84,36 @@ export default function MatchDetailsPage() {
       return;
     }
     
-    if (me.user.coinBalance < match.entryFee) {
-      toast({ variant: "destructive", title: "Insufficient Coins", description: `You need ${match.entryFee} coins to join this match.` });
+    if (me.user.coinBalance < finalFee) {
+      toast({ variant: "destructive", title: "Insufficient Coins", description: `You need ${finalFee} coins to join this match.` });
       return;
     }
 
     joinMutation.mutate(
-      { id: matchId },
+      { id: matchId, data: { couponCode: appliedCoupon?.code } },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetMatchQueryKey(matchId) });
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
           queryClient.invalidateQueries({ queryKey: getListMatchesQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
-          toast({ 
-            title: "Match Joined!", 
-            description: `You have successfully registered for ${match.name}.`
+          queryClient.invalidateQueries({ queryKey: getGetMyCouponsQueryKey() });
+          toast({
+            title: "Match Joined!",
+            description: appliedCoupon
+              ? `Registered for ${match.name} using coupon ${appliedCoupon.code}.`
+              : `You have successfully registered for ${match.name}.`,
           });
+          setAppliedCoupon(null);
+          setCouponInput("");
         },
         onError: (err: any) => {
-          toast({ variant: "destructive", title: "Failed to join", description: err.message || "An error occurred." });
+          toast({
+            variant: "destructive",
+            title: "Failed to join",
+            description: err?.response?.data?.error ?? err.message ?? "An error occurred.",
+          });
         }
       }
     );
@@ -175,7 +220,7 @@ export default function MatchDetailsPage() {
 
                 <div className="flex justify-between items-center py-4 border-b border-white/5">
                   <span className="text-muted-foreground font-medium">Entry Fee</span>
-                  <span className="font-bold text-lg flex items-center gap-1.5">
+                  <span className={`font-bold text-lg flex items-center gap-1.5 ${appliedCoupon ? "line-through text-muted-foreground" : ""}`}>
                     {match.entryFee > 0 ? (
                       <><Coins className="h-5 w-5 text-secondary" /> {match.entryFee}</>
                     ) : (
@@ -183,6 +228,88 @@ export default function MatchDetailsPage() {
                     )}
                   </span>
                 </div>
+
+                {isPaid && me?.user && !match.joinedByMe && !isCompleted && !isFull && (
+                  <div className="py-4 border-b border-white/5 space-y-2">
+                    <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
+                      <Ticket className="h-3.5 w-3.5 text-primary" /> Apply Coupon
+                    </label>
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 text-green-400 text-sm font-bold">
+                            <Check className="h-3.5 w-3.5" />
+                            <span className="font-mono truncate">{appliedCoupon.code}</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center">
+                            <IndianRupee className="h-3 w-3" />{appliedCoupon.valueInr} off
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleRemoveCoupon}
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          placeholder="ARN-XX-XXXXXXXX"
+                          className="font-mono text-sm uppercase bg-background border-white/10 focus-visible:ring-primary/40"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleApplyCoupon();
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={handleApplyCoupon}
+                          disabled={previewMutation.isPending || !couponInput.trim()}
+                          className="border-primary/40 text-primary hover:bg-primary/10 shrink-0"
+                        >
+                          {previewMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Apply"
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      Don't have one? <Link href="/coupons" className="text-primary hover:underline">Redeem coins for coupons</Link>.
+                    </p>
+                  </div>
+                )}
+
+                {isPaid && appliedCoupon && (
+                  <div className="flex justify-between items-center py-4 border-b border-white/5">
+                    <span className="text-muted-foreground font-medium flex items-center gap-1.5">
+                      <Ticket className="h-4 w-4 text-primary" /> Coupon discount
+                    </span>
+                    <span className="font-bold text-lg text-green-400 flex items-center">
+                      -<IndianRupee className="h-4 w-4" />{discount}
+                    </span>
+                  </div>
+                )}
+
+                {isPaid && (
+                  <div className="flex justify-between items-center py-4 border-b border-white/5">
+                    <span className="font-bold uppercase tracking-wider text-sm">Final price</span>
+                    <span className="font-black text-2xl flex items-center gap-1.5 text-primary">
+                      {finalFee > 0 ? (
+                        <>
+                          <Coins className="h-6 w-6" /> {finalFee}
+                        </>
+                      ) : (
+                        <span className="text-green-400">FREE</span>
+                      )}
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center py-4 border-b border-white/5">
                   <span className="text-muted-foreground font-medium">Status</span>

@@ -6,6 +6,7 @@ import {
   matchParticipantsTable,
   usersTable,
   coinTransactionsTable,
+  couponsTable,
 } from "@workspace/db";
 import {
   CreateMatchBody,
@@ -148,6 +149,10 @@ router.post("/matches/:id/join", async (req, res): Promise<void> => {
     return;
   }
 
+  const couponCodeRaw =
+    typeof req.body?.couponCode === "string" ? req.body.couponCode.trim() : "";
+  const couponCode = couponCodeRaw.length > 0 ? couponCodeRaw.toUpperCase() : null;
+
   const result = await db.transaction(async (tx) => {
     const [match] = await tx
       .select()
@@ -158,6 +163,23 @@ router.post("/matches/:id/join", async (req, res): Promise<void> => {
     if (match.status !== "open") return { ok: false as const, status: 400, error: "Match is closed" };
     if (match.slotsTaken >= match.slots)
       return { ok: false as const, status: 400, error: "Match is full" };
+
+    let coupon: typeof couponsTable.$inferSelect | null = null;
+    if (couponCode) {
+      if (match.type !== "paid")
+        return { ok: false as const, status: 400, error: "Coupons only apply to paid matches" };
+      const [c] = await tx
+        .select()
+        .from(couponsTable)
+        .where(eq(couponsTable.code, couponCode))
+        .for("update");
+      if (!c) return { ok: false as const, status: 400, error: "Invalid coupon code" };
+      if (c.userId !== userId)
+        return { ok: false as const, status: 400, error: "This coupon belongs to another player" };
+      if (c.status !== "active")
+        return { ok: false as const, status: 400, error: "Coupon already used" };
+      coupon = c;
+    }
 
     const existing = await tx
       .select()
@@ -178,19 +200,35 @@ router.post("/matches/:id/join", async (req, res): Promise<void> => {
       .for("update");
     if (!user) return { ok: false as const, status: 404, error: "User not found" };
 
+    let finalFee = match.entryFee;
     if (match.type === "paid") {
-      if (user.coinBalance < match.entryFee)
+      const discount = coupon ? Math.min(coupon.valueInr, match.entryFee) : 0;
+      finalFee = Math.max(0, match.entryFee - discount);
+
+      if (user.coinBalance < finalFee)
         return { ok: false as const, status: 400, error: "Not enough coins" };
-      await tx
-        .update(usersTable)
-        .set({ coinBalance: user.coinBalance - match.entryFee })
-        .where(eq(usersTable.id, user.id));
-      await tx.insert(coinTransactionsTable).values({
-        userId: user.id,
-        amount: -match.entryFee,
-        reason: `Joined ${match.name}`,
-        matchId: match.id,
-      });
+
+      if (finalFee > 0) {
+        await tx
+          .update(usersTable)
+          .set({ coinBalance: user.coinBalance - finalFee })
+          .where(eq(usersTable.id, user.id));
+        await tx.insert(coinTransactionsTable).values({
+          userId: user.id,
+          amount: -finalFee,
+          reason: coupon
+            ? `Joined ${match.name} (coupon ${coupon.code} -₹${discount})`
+            : `Joined ${match.name}`,
+          matchId: match.id,
+        });
+      }
+
+      if (coupon) {
+        await tx
+          .update(couponsTable)
+          .set({ status: "used" })
+          .where(eq(couponsTable.id, coupon.id));
+      }
     }
 
     await tx.insert(matchParticipantsTable).values({ matchId: match.id, userId: user.id });

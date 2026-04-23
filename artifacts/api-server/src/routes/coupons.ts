@@ -6,7 +6,7 @@ import {
   couponsTable,
   coinTransactionsTable,
 } from "@workspace/db";
-import { RedeemCouponBody } from "@workspace/api-zod";
+import { RedeemCouponBody, PreviewCouponBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -19,6 +19,34 @@ const COUPON_OPTIONS = [
 
 router.get("/coupons/options", (_req, res) => {
   res.json(COUPON_OPTIONS);
+});
+
+router.post("/coupons/preview", async (req, res): Promise<void> => {
+  const userId = req.session.userId;
+  if (!userId) {
+    res.status(401).json({ error: "Not logged in" });
+    return;
+  }
+  const parsed = PreviewCouponBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const code = parsed.data.code.trim().toUpperCase();
+  const [c] = await db.select().from(couponsTable).where(eq(couponsTable.code, code));
+  if (!c) {
+    res.status(404).json({ error: "Invalid coupon code" });
+    return;
+  }
+  if (c.userId !== userId) {
+    res.status(403).json({ error: "This coupon belongs to another player" });
+    return;
+  }
+  if (c.status !== "active") {
+    res.status(400).json({ error: "Coupon already used" });
+    return;
+  }
+  res.json({ code: c.code, valueInr: c.valueInr, status: c.status });
 });
 
 router.get("/coupons", async (req, res): Promise<void> => {
