@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "mGFXMwPpbQAk0om5mJwf5"
+uri = "file://artifacts/arena/public/hero-bg.png"
+type = "image"
+title = "esports arena neon action shot"
+
+[[generated]]
+id = "hnQFGDgrqh-YoASVIhARM"
+uri = "file://artifacts/arena/public/tournament-bg.png"
+type = "image"
+title = "esports tournament trophy neon"

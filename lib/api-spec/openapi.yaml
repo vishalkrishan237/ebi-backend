@@ -1,22 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Arena Esports API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: matches
+  - name: profile
+  - name: rewards
+  - name: admin
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +26,176 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupBody"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "204":
+          description: Logged out
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user (or null when guest)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+  /matches:
+    get:
+      operationId: listMatches
+      tags: [matches]
+      summary: List all matches
+      responses:
+        "200":
+          description: All matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+    post:
+      operationId: createMatch
+      tags: [admin]
+      summary: Create a match (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMatchBody"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /matches/{id}:
+    get:
+      operationId: getMatch
+      tags: [matches]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchDetails"
+  /matches/{id}/join:
+    post:
+      operationId: joinMatch
+      tags: [matches]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinResponse"
+  /matches/{id}/declare-winner:
+    post:
+      operationId: declareWinner
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeclareWinnerBody"
+      responses:
+        "200":
+          description: Winner declared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Profile with joined matches
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+  /rewards:
+    get:
+      operationId: getRewards
+      tags: [rewards]
+      summary: Coin transaction history
+      responses:
+        "200":
+          description: Coin history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CoinTransaction"
 components:
   schemas:
     HealthStatus:
@@ -31,6 +203,196 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
-
+      required: [status]
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        freeFireUid:
+          type: string
+        coinBalance:
+          type: integer
+        isAdmin:
+          type: boolean
+      required: [id, username, email, freeFireUid, coinBalance, isAdmin]
+    MeResponse:
+      type: object
+      properties:
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+      required: [user]
+    SignupBody:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+        freeFireUid:
+          type: string
+          minLength: 4
+        password:
+          type: string
+          minLength: 6
+      required: [username, email, freeFireUid, password]
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+    Match:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+        prize:
+          type: integer
+        slots:
+          type: integer
+        slotsTaken:
+          type: integer
+        status:
+          type: string
+          enum: [open, completed]
+        winnerUserId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        startsAt:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, type, entryFee, prize, slots, slotsTaken, status, winnerUserId, startsAt, createdAt]
+    MatchParticipant:
+      type: object
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        freeFireUid:
+          type: string
+        joinedAt:
+          type: string
+      required: [userId, username, freeFireUid, joinedAt]
+    MatchDetails:
+      allOf:
+        - $ref: "#/components/schemas/Match"
+        - type: object
+          properties:
+            participants:
+              type: array
+              items:
+                $ref: "#/components/schemas/MatchParticipant"
+            joinedByMe:
+              type: boolean
+            winnerUsername:
+              oneOf:
+                - type: string
+                - type: "null"
+          required: [participants, joinedByMe, winnerUsername]
+    CreateMatchBody:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+          minimum: 0
+        prize:
+          type: integer
+          minimum: 0
+        slots:
+          type: integer
+          minimum: 2
+        startsAt:
+          type: string
+      required: [name, type, entryFee, prize, slots, startsAt]
+    DeclareWinnerBody:
+      type: object
+      properties:
+        winnerUserId:
+          type: integer
+      required: [winnerUserId]
+    JoinResponse:
+      type: object
+      properties:
+        match:
+          $ref: "#/components/schemas/Match"
+        coinBalance:
+          type: integer
+      required: [match, coinBalance]
+    JoinedMatchSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+        prize:
+          type: integer
+        status:
+          type: string
+          enum: [open, completed]
+        wonByMe:
+          type: boolean
+        joinedAt:
+          type: string
+      required: [id, name, type, entryFee, prize, status, wonByMe, joinedAt]
+    Profile:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        joinedMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/JoinedMatchSummary"
+      required: [user, joinedMatches]
+    CoinTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+          description: Positive for earnings, negative for spending
+        reason:
+          type: string
+        matchId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        matchName:
+          oneOf:
+            - type: string
+            - type: "null"
+        createdAt:
+          type: string
+      required: [id, amount, reason, matchId, matchName, createdAt]

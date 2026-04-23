@@ -1,0 +1,295 @@
+import { Router, type IRouter } from "express";
+import { eq, desc, sql, and } from "drizzle-orm";
+import {
+  db,
+  matchesTable,
+  matchParticipantsTable,
+  usersTable,
+  coinTransactionsTable,
+} from "@workspace/db";
+import {
+  CreateMatchBody,
+  GetMatchParams,
+  JoinMatchParams,
+  DeclareWinnerParams,
+  DeclareWinnerBody,
+} from "@workspace/api-zod";
+import { toUserDto } from "../lib/users";
+
+const router: IRouter = Router();
+
+function serializeMatch(m: typeof matchesTable.$inferSelect) {
+  return {
+    id: m.id,
+    name: m.name,
+    type: m.type,
+    entryFee: m.entryFee,
+    prize: m.prize,
+    slots: m.slots,
+    slotsTaken: m.slotsTaken,
+    status: m.status,
+    winnerUserId: m.winnerUserId,
+    startsAt: m.startsAt.toISOString(),
+    createdAt: m.createdAt.toISOString(),
+  };
+}
+
+router.get("/matches", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(matchesTable)
+    .orderBy(desc(matchesTable.createdAt));
+  res.json(rows.map(serializeMatch));
+});
+
+router.post("/matches", async (req, res): Promise<void> => {
+  const userId = req.session.userId;
+  if (!userId) {
+    res.status(401).json({ error: "Not logged in" });
+    return;
+  }
+  const [me] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!me?.isAdmin) {
+    res.status(403).json({ error: "Admin only" });
+    return;
+  }
+
+  const parsed = CreateMatchBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { name, type, entryFee, prize, slots, startsAt } = parsed.data;
+  const startsAtDate = new Date(startsAt);
+  if (Number.isNaN(startsAtDate.getTime())) {
+    res.status(400).json({ error: "Invalid startsAt" });
+    return;
+  }
+
+  const [created] = await db
+    .insert(matchesTable)
+    .values({
+      name,
+      type,
+      entryFee: type === "free" ? 0 : entryFee,
+      prize,
+      slots,
+      slotsTaken: 0,
+      status: "open",
+      startsAt: startsAtDate,
+    })
+    .returning();
+  if (!created) {
+    res.status(500).json({ error: "Failed to create" });
+    return;
+  }
+  res.json(serializeMatch(created));
+});
+
+router.get("/matches/:id", async (req, res): Promise<void> => {
+  const params = GetMatchParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [match] = await db.select().from(matchesTable).where(eq(matchesTable.id, params.data.id));
+  if (!match) {
+    res.status(404).json({ error: "Match not found" });
+    return;
+  }
+
+  const participants = await db
+    .select({
+      userId: matchParticipantsTable.userId,
+      username: usersTable.username,
+      freeFireUid: usersTable.freeFireUid,
+      joinedAt: matchParticipantsTable.joinedAt,
+    })
+    .from(matchParticipantsTable)
+    .innerJoin(usersTable, eq(usersTable.id, matchParticipantsTable.userId))
+    .where(eq(matchParticipantsTable.matchId, match.id));
+
+  const sessionUserId = req.session.userId;
+  const joinedByMe =
+    sessionUserId != null && participants.some((p) => p.userId === sessionUserId);
+
+  let winnerUsername: string | null = null;
+  if (match.winnerUserId != null) {
+    const [w] = await db
+      .select({ username: usersTable.username })
+      .from(usersTable)
+      .where(eq(usersTable.id, match.winnerUserId));
+    winnerUsername = w?.username ?? null;
+  }
+
+  res.json({
+    ...serializeMatch(match),
+    participants: participants.map((p) => ({
+      userId: p.userId,
+      username: p.username,
+      freeFireUid: p.freeFireUid,
+      joinedAt: p.joinedAt.toISOString(),
+    })),
+    joinedByMe,
+    winnerUsername,
+  });
+});
+
+router.post("/matches/:id/join", async (req, res): Promise<void> => {
+  const params = JoinMatchParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const userId = req.session.userId;
+  if (!userId) {
+    res.status(401).json({ error: "Not logged in" });
+    return;
+  }
+
+  const result = await db.transaction(async (tx) => {
+    const [match] = await tx
+      .select()
+      .from(matchesTable)
+      .where(eq(matchesTable.id, params.data.id))
+      .for("update");
+    if (!match) return { ok: false as const, status: 404, error: "Match not found" };
+    if (match.status !== "open") return { ok: false as const, status: 400, error: "Match is closed" };
+    if (match.slotsTaken >= match.slots)
+      return { ok: false as const, status: 400, error: "Match is full" };
+
+    const existing = await tx
+      .select()
+      .from(matchParticipantsTable)
+      .where(
+        and(
+          eq(matchParticipantsTable.matchId, match.id),
+          eq(matchParticipantsTable.userId, userId),
+        ),
+      );
+    if (existing.length > 0)
+      return { ok: false as const, status: 400, error: "Already joined" };
+
+    const [user] = await tx
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .for("update");
+    if (!user) return { ok: false as const, status: 404, error: "User not found" };
+
+    if (match.type === "paid") {
+      if (user.coinBalance < match.entryFee)
+        return { ok: false as const, status: 400, error: "Not enough coins" };
+      await tx
+        .update(usersTable)
+        .set({ coinBalance: user.coinBalance - match.entryFee })
+        .where(eq(usersTable.id, user.id));
+      await tx.insert(coinTransactionsTable).values({
+        userId: user.id,
+        amount: -match.entryFee,
+        reason: `Joined ${match.name}`,
+        matchId: match.id,
+      });
+    }
+
+    await tx.insert(matchParticipantsTable).values({ matchId: match.id, userId: user.id });
+    const [updatedMatch] = await tx
+      .update(matchesTable)
+      .set({ slotsTaken: match.slotsTaken + 1 })
+      .where(eq(matchesTable.id, match.id))
+      .returning();
+
+    const [refreshedUser] = await tx
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, user.id));
+
+    return {
+      ok: true as const,
+      match: updatedMatch!,
+      coinBalance: refreshedUser!.coinBalance,
+    };
+  });
+
+  if (!result.ok) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.json({ match: serializeMatch(result.match), coinBalance: result.coinBalance });
+});
+
+router.post("/matches/:id/declare-winner", async (req, res): Promise<void> => {
+  const params = DeclareWinnerParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = DeclareWinnerBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const userId = req.session.userId;
+  if (!userId) {
+    res.status(401).json({ error: "Not logged in" });
+    return;
+  }
+  const [me] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!me?.isAdmin) {
+    res.status(403).json({ error: "Admin only" });
+    return;
+  }
+
+  const result = await db.transaction(async (tx) => {
+    const [match] = await tx
+      .select()
+      .from(matchesTable)
+      .where(eq(matchesTable.id, params.data.id))
+      .for("update");
+    if (!match) return { ok: false as const, status: 404, error: "Match not found" };
+    if (match.status === "completed")
+      return { ok: false as const, status: 400, error: "Already completed" };
+
+    const [participant] = await tx
+      .select()
+      .from(matchParticipantsTable)
+      .where(
+        and(
+          eq(matchParticipantsTable.matchId, match.id),
+          eq(matchParticipantsTable.userId, body.data.winnerUserId),
+        ),
+      );
+    if (!participant)
+      return { ok: false as const, status: 400, error: "Winner is not a participant" };
+
+    await tx
+      .update(usersTable)
+      .set({ coinBalance: sql`${usersTable.coinBalance} + ${match.prize}` })
+      .where(eq(usersTable.id, body.data.winnerUserId));
+
+    await tx.insert(coinTransactionsTable).values({
+      userId: body.data.winnerUserId,
+      amount: match.prize,
+      reason: `Won ${match.name}`,
+      matchId: match.id,
+    });
+
+    const [updated] = await tx
+      .update(matchesTable)
+      .set({ status: "completed", winnerUserId: body.data.winnerUserId })
+      .where(eq(matchesTable.id, match.id))
+      .returning();
+
+    return { ok: true as const, match: updated! };
+  });
+
+  if (!result.ok) {
+    res.status(result.status).json({ error: result.error });
+    return;
+  }
+  res.json(serializeMatch(result.match));
+});
+
+export default router;
