@@ -11,6 +11,7 @@ export const usersTable = pgTable(
     passwordHash: text("password_hash").notNull(),
     coinBalance: integer("coin_balance").notNull().default(1000),
     isAdmin: boolean("is_admin").notNull().default(false),
+    isBanned: boolean("is_banned").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

@@ -30,6 +30,10 @@ export const requireAuth: RequestHandler = async (
     res.status(401).json({ error: "Session expired" });
     return;
   }
+  if (user.isBanned) {
+    res.status(403).json({ error: "Account is banned" });
+    return;
+  }
   req.userId = user.id;
   req.user = user;
   next();
@@ -52,6 +56,10 @@ export const requireAdmin: RequestHandler = async (
   if (!user) {
     req.session.destroy(() => {});
     res.status(401).json({ error: "Session expired" });
+    return;
+  }
+  if (user.isBanned) {
+    res.status(403).json({ error: "Account is banned" });
     return;
   }
   if (!user.isAdmin) {

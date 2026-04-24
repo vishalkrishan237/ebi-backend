@@ -249,9 +249,14 @@ router.post(
         await tx
           .insert(matchParticipantsTable)
           .values({ matchId: match.id, userId: user.id });
+        const newSlotsTaken = match.slotsTaken + 1;
+        const autoClose = newSlotsTaken >= match.slots;
         const [updatedMatch] = await tx
           .update(matchesTable)
-          .set({ slotsTaken: match.slotsTaken + 1 })
+          .set({
+            slotsTaken: newSlotsTaken,
+            ...(autoClose ? { status: "live" as const } : {}),
+          })
           .where(eq(matchesTable.id, match.id))
           .returning();
 

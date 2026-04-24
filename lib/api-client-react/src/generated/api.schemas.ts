@@ -16,6 +16,7 @@ export interface User {
   freeFireUid: string;
   coinBalance: number;
   isAdmin: boolean;
+  isBanned: boolean;
 }
 
 export interface MeResponse {
@@ -65,6 +66,7 @@ export type MatchStatus = (typeof MatchStatus)[keyof typeof MatchStatus];
 
 export const MatchStatus = {
   open: "open",
+  live: "live",
   completed: "completed",
 } as const;
 
@@ -151,6 +153,7 @@ export type JoinedMatchSummaryStatus =
 
 export const JoinedMatchSummaryStatus = {
   open: "open",
+  live: "live",
   completed: "completed",
 } as const;
 
@@ -233,14 +236,15 @@ export interface RedeemCouponBody {
   coinCost: number;
 }
 
-export interface LeaderboardEntry {
-  rank: number;
-  userId: number;
+export interface AdminUser {
+  id: number;
   username: string;
+  email: string;
   freeFireUid: string;
-  wins: number;
-  totalPrize: number;
   coinBalance: number;
+  isAdmin: boolean;
+  isBanned: boolean;
+  createdAt: string;
 }
 
 export interface CoinTransaction {
@@ -252,3 +256,110 @@ export interface CoinTransaction {
   matchName: string | null;
   createdAt: string;
 }
+
+export interface AdminUserDetail {
+  user: AdminUser;
+  joinedMatches: JoinedMatchSummary[];
+  coinHistory: CoinTransaction[];
+}
+
+export interface AdminLog {
+  id: number;
+  adminUserId: number;
+  adminUsername: string | null;
+  action: string;
+  targetType: string | null;
+  targetId: number | null;
+  details: string | null;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalMatches: number;
+  activeMatches: number;
+  completedMatches: number;
+  bannedUsers: number;
+  coinsInCirculation: number;
+  recentLogs: AdminLog[];
+}
+
+export interface BanUserBody {
+  /** @maxLength 200 */
+  reason?: string;
+}
+
+export interface AdjustCoinsBody {
+  /**
+   * @minimum -1000000
+   * @maximum 1000000
+   */
+  amount: number;
+  /**
+   * @minLength 3
+   * @maxLength 200
+   */
+  reason: string;
+}
+
+export type UpdateMatchBodyType =
+  (typeof UpdateMatchBodyType)[keyof typeof UpdateMatchBodyType];
+
+export const UpdateMatchBodyType = {
+  paid: "paid",
+  free: "free",
+} as const;
+
+export interface UpdateMatchBody {
+  /**
+   * @minLength 3
+   * @maxLength 80
+   */
+  name?: string;
+  type?: UpdateMatchBodyType;
+  /**
+   * @minimum 0
+   * @maximum 1000000
+   */
+  entryFee?: number;
+  /**
+   * @minimum 0
+   * @maximum 10000000
+   */
+  prize?: number;
+  /**
+   * @minimum 2
+   * @maximum 200
+   */
+  slots?: number;
+  startsAt?: string;
+}
+
+export interface DeleteResult {
+  deleted: boolean;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: number;
+  username: string;
+  freeFireUid: string;
+  wins: number;
+  totalPrize: number;
+  coinBalance: number;
+}
+
+export type ListAdminUsersParams = {
+  /**
+   * @maxLength 64
+   */
+  search?: string;
+};
+
+export type GetAdminLogsParams = {
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  limit?: number;
+};

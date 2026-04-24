@@ -6,6 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./adjustCoinsBody";
+export * from "./adminLog";
+export * from "./adminStats";
+export * from "./adminUser";
+export * from "./adminUserDetail";
+export * from "./banUserBody";
 export * from "./coinTransaction";
 export * from "./coupon";
 export * from "./couponOption";
@@ -13,6 +19,8 @@ export * from "./couponPreview";
 export * from "./createMatchBody";
 export * from "./createMatchBodyType";
 export * from "./declareWinnerBody";
+export * from "./deleteResult";
+export * from "./getAdminLogsParams";
 export * from "./healthStatus";
 export * from "./joinedMatchSummary";
 export * from "./joinedMatchSummaryStatus";
@@ -20,6 +28,7 @@ export * from "./joinedMatchSummaryType";
 export * from "./joinMatchBody";
 export * from "./joinResponse";
 export * from "./leaderboardEntry";
+export * from "./listAdminUsersParams";
 export * from "./loginBody";
 export * from "./match";
 export * from "./matchDetails";
@@ -33,4 +42,6 @@ export * from "./previewCouponBody";
 export * from "./profile";
 export * from "./redeemCouponBody";
 export * from "./signupBody";
+export * from "./updateMatchBody";
+export * from "./updateMatchBodyType";
 export * from "./user";

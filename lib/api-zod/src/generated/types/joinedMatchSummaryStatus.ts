@@ -11,5 +11,6 @@ export type JoinedMatchSummaryStatus =
 
 export const JoinedMatchSummaryStatus = {
   open: "open",
+  live: "live",
   completed: "completed",
 } as const;

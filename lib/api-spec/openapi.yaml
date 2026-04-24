@@ -290,6 +290,213 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CoinTransaction"
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Dashboard stats and recent activity
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List/search users
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 64
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+  /admin/users/{id}:
+    get:
+      operationId: getAdminUser
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User detail with match history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetail"
+  /admin/users/{id}/ban:
+    post:
+      operationId: banUser
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanUserBody"
+      responses:
+        "200":
+          description: User banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+  /admin/users/{id}/unban:
+    post:
+      operationId: unbanUser
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User unbanned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+  /admin/users/{id}/coins:
+    post:
+      operationId: adjustUserCoins
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustCoinsBody"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+  /admin/matches/{id}:
+    patch:
+      operationId: updateMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMatchBody"
+      responses:
+        "200":
+          description: Updated match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+    delete:
+      operationId: deleteMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /admin/matches/{id}/start:
+    post:
+      operationId: startMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /admin/matches/{id}/end:
+    post:
+      operationId: endMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match ended without winner (refunds entry fees)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /admin/logs:
+    get:
+      operationId: getAdminLogs
+      tags: [admin]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Recent admin actions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminLog"
 components:
   schemas:
     HealthStatus:
@@ -313,7 +520,9 @@ components:
           type: integer
         isAdmin:
           type: boolean
-      required: [id, username, email, freeFireUid, coinBalance, isAdmin]
+        isBanned:
+          type: boolean
+      required: [id, username, email, freeFireUid, coinBalance, isAdmin, isBanned]
     MeResponse:
       type: object
       properties:
@@ -376,7 +585,7 @@ components:
           type: integer
         status:
           type: string
-          enum: [open, completed]
+          enum: [open, live, completed]
         winnerUserId:
           oneOf:
             - type: integer
@@ -470,7 +679,7 @@ components:
           type: integer
         status:
           type: string
-          enum: [open, completed]
+          enum: [open, live, completed]
         wonByMe:
           type: boolean
         joinedAt:
@@ -575,6 +784,136 @@ components:
           minimum: 1
           maximum: 100000
       required: [coinCost]
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        freeFireUid:
+          type: string
+        coinBalance:
+          type: integer
+        isAdmin:
+          type: boolean
+        isBanned:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, username, email, freeFireUid, coinBalance, isAdmin, isBanned, createdAt]
+    AdminUserDetail:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AdminUser"
+        joinedMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/JoinedMatchSummary"
+        coinHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoinTransaction"
+      required: [user, joinedMatches, coinHistory]
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalMatches:
+          type: integer
+        activeMatches:
+          type: integer
+        completedMatches:
+          type: integer
+        bannedUsers:
+          type: integer
+        coinsInCirculation:
+          type: integer
+        recentLogs:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminLog"
+      required: [totalUsers, totalMatches, activeMatches, completedMatches, bannedUsers, coinsInCirculation, recentLogs]
+    AdminLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        adminUserId:
+          type: integer
+        adminUsername:
+          oneOf:
+            - type: string
+            - type: "null"
+        action:
+          type: string
+        targetType:
+          oneOf:
+            - type: string
+            - type: "null"
+        targetId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        details:
+          oneOf:
+            - type: string
+            - type: "null"
+        createdAt:
+          type: string
+      required: [id, adminUserId, adminUsername, action, targetType, targetId, details, createdAt]
+    BanUserBody:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 200
+    AdjustCoinsBody:
+      type: object
+      properties:
+        amount:
+          type: integer
+          minimum: -1000000
+          maximum: 1000000
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 200
+      required: [amount, reason]
+    UpdateMatchBody:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 80
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        prize:
+          type: integer
+          minimum: 0
+          maximum: 10000000
+        slots:
+          type: integer
+          minimum: 2
+          maximum: 200
+        startsAt:
+          type: string
+    DeleteResult:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+      required: [deleted]
     LeaderboardEntry:
       type: object
       properties:

@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface User {
+export interface AdminUser {
   id: number;
   username: string;
   email: string;
@@ -14,4 +14,5 @@ export interface User {
   coinBalance: number;
   isAdmin: boolean;
   isBanned: boolean;
+  createdAt: string;
 }

@@ -10,5 +10,6 @@ export type MatchStatus = (typeof MatchStatus)[keyof typeof MatchStatus];
 
 export const MatchStatus = {
   open: "open",
+  live: "live",
   completed: "completed",
 } as const;

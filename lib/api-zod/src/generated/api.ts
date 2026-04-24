@@ -52,6 +52,7 @@ export const SignupResponse = zod.object({
   freeFireUid: zod.string(),
   coinBalance: zod.number(),
   isAdmin: zod.boolean(),
+  isBanned: zod.boolean(),
 });
 
 /**
@@ -73,6 +74,7 @@ export const LoginResponse = zod.object({
   freeFireUid: zod.string(),
   coinBalance: zod.number(),
   isAdmin: zod.boolean(),
+  isBanned: zod.boolean(),
 });
 
 /**
@@ -87,6 +89,7 @@ export const GetMeResponse = zod.object({
       freeFireUid: zod.string(),
       coinBalance: zod.number(),
       isAdmin: zod.boolean(),
+      isBanned: zod.boolean(),
     }),
     zod.null(),
   ]),
@@ -103,7 +106,7 @@ export const ListMatchesResponseItem = zod.object({
   prize: zod.number(),
   slots: zod.number(),
   slotsTaken: zod.number(),
-  status: zod.enum(["open", "completed"]),
+  status: zod.enum(["open", "live", "completed"]),
   winnerUserId: zod.union([zod.number(), zod.null()]),
   startsAt: zod.string(),
   createdAt: zod.string(),
@@ -145,7 +148,7 @@ export const CreateMatchResponse = zod.object({
   prize: zod.number(),
   slots: zod.number(),
   slotsTaken: zod.number(),
-  status: zod.enum(["open", "completed"]),
+  status: zod.enum(["open", "live", "completed"]),
   winnerUserId: zod.union([zod.number(), zod.null()]),
   startsAt: zod.string(),
   createdAt: zod.string(),
@@ -164,7 +167,7 @@ export const GetMatchResponse = zod
     prize: zod.number(),
     slots: zod.number(),
     slotsTaken: zod.number(),
-    status: zod.enum(["open", "completed"]),
+    status: zod.enum(["open", "live", "completed"]),
     winnerUserId: zod.union([zod.number(), zod.null()]),
     startsAt: zod.string(),
     createdAt: zod.string(),
@@ -203,7 +206,7 @@ export const JoinMatchResponse = zod.object({
     prize: zod.number(),
     slots: zod.number(),
     slotsTaken: zod.number(),
-    status: zod.enum(["open", "completed"]),
+    status: zod.enum(["open", "live", "completed"]),
     winnerUserId: zod.union([zod.number(), zod.null()]),
     startsAt: zod.string(),
     createdAt: zod.string(),
@@ -243,7 +246,7 @@ export const DeclareWinnerResponse = zod.object({
   prize: zod.number(),
   slots: zod.number(),
   slotsTaken: zod.number(),
-  status: zod.enum(["open", "completed"]),
+  status: zod.enum(["open", "live", "completed"]),
   winnerUserId: zod.union([zod.number(), zod.null()]),
   startsAt: zod.string(),
   createdAt: zod.string(),
@@ -260,6 +263,7 @@ export const GetProfileResponse = zod.object({
     freeFireUid: zod.string(),
     coinBalance: zod.number(),
     isAdmin: zod.boolean(),
+    isBanned: zod.boolean(),
   }),
   joinedMatches: zod.array(
     zod.object({
@@ -268,7 +272,7 @@ export const GetProfileResponse = zod.object({
       type: zod.enum(["paid", "free"]),
       entryFee: zod.number(),
       prize: zod.number(),
-      status: zod.enum(["open", "completed"]),
+      status: zod.enum(["open", "live", "completed"]),
       wonByMe: zod.boolean(),
       joinedAt: zod.string(),
     }),
@@ -350,3 +354,274 @@ export const GetRewardsResponseItem = zod.object({
   createdAt: zod.string(),
 });
 export const GetRewardsResponse = zod.array(GetRewardsResponseItem);
+
+/**
+ * @summary Dashboard stats and recent activity
+ */
+export const GetAdminStatsResponse = zod.object({
+  totalUsers: zod.number(),
+  totalMatches: zod.number(),
+  activeMatches: zod.number(),
+  completedMatches: zod.number(),
+  bannedUsers: zod.number(),
+  coinsInCirculation: zod.number(),
+  recentLogs: zod.array(
+    zod.object({
+      id: zod.number(),
+      adminUserId: zod.number(),
+      adminUsername: zod.union([zod.string(), zod.null()]),
+      action: zod.string(),
+      targetType: zod.union([zod.string(), zod.null()]),
+      targetId: zod.union([zod.number(), zod.null()]),
+      details: zod.union([zod.string(), zod.null()]),
+      createdAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary List/search users
+ */
+export const listAdminUsersQuerySearchMax = 64;
+
+export const ListAdminUsersQueryParams = zod.object({
+  search: zod.coerce.string().max(listAdminUsersQuerySearchMax).optional(),
+});
+
+export const ListAdminUsersResponseItem = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  email: zod.string(),
+  freeFireUid: zod.string(),
+  coinBalance: zod.number(),
+  isAdmin: zod.boolean(),
+  isBanned: zod.boolean(),
+  createdAt: zod.string(),
+});
+export const ListAdminUsersResponse = zod.array(ListAdminUsersResponseItem);
+
+export const GetAdminUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetAdminUserResponse = zod.object({
+  user: zod.object({
+    id: zod.number(),
+    username: zod.string(),
+    email: zod.string(),
+    freeFireUid: zod.string(),
+    coinBalance: zod.number(),
+    isAdmin: zod.boolean(),
+    isBanned: zod.boolean(),
+    createdAt: zod.string(),
+  }),
+  joinedMatches: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      type: zod.enum(["paid", "free"]),
+      entryFee: zod.number(),
+      prize: zod.number(),
+      status: zod.enum(["open", "live", "completed"]),
+      wonByMe: zod.boolean(),
+      joinedAt: zod.string(),
+    }),
+  ),
+  coinHistory: zod.array(
+    zod.object({
+      id: zod.number(),
+      amount: zod
+        .number()
+        .describe("Positive for earnings, negative for spending"),
+      reason: zod.string(),
+      matchId: zod.union([zod.number(), zod.null()]),
+      matchName: zod.union([zod.string(), zod.null()]),
+      createdAt: zod.string(),
+    }),
+  ),
+});
+
+export const BanUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const banUserBodyReasonMax = 200;
+
+export const BanUserBody = zod.object({
+  reason: zod.string().max(banUserBodyReasonMax).optional(),
+});
+
+export const BanUserResponse = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  email: zod.string(),
+  freeFireUid: zod.string(),
+  coinBalance: zod.number(),
+  isAdmin: zod.boolean(),
+  isBanned: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+export const UnbanUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UnbanUserResponse = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  email: zod.string(),
+  freeFireUid: zod.string(),
+  coinBalance: zod.number(),
+  isAdmin: zod.boolean(),
+  isBanned: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+export const AdjustUserCoinsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const adjustUserCoinsBodyAmountMin = -1000000;
+export const adjustUserCoinsBodyAmountMax = 1000000;
+
+export const adjustUserCoinsBodyReasonMin = 3;
+export const adjustUserCoinsBodyReasonMax = 200;
+
+export const AdjustUserCoinsBody = zod.object({
+  amount: zod
+    .number()
+    .min(adjustUserCoinsBodyAmountMin)
+    .max(adjustUserCoinsBodyAmountMax),
+  reason: zod
+    .string()
+    .min(adjustUserCoinsBodyReasonMin)
+    .max(adjustUserCoinsBodyReasonMax),
+});
+
+export const AdjustUserCoinsResponse = zod.object({
+  id: zod.number(),
+  username: zod.string(),
+  email: zod.string(),
+  freeFireUid: zod.string(),
+  coinBalance: zod.number(),
+  isAdmin: zod.boolean(),
+  isBanned: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+export const UpdateMatchParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const updateMatchBodyNameMin = 3;
+export const updateMatchBodyNameMax = 80;
+
+export const updateMatchBodyEntryFeeMin = 0;
+export const updateMatchBodyEntryFeeMax = 1000000;
+
+export const updateMatchBodyPrizeMin = 0;
+export const updateMatchBodyPrizeMax = 10000000;
+
+export const updateMatchBodySlotsMin = 2;
+export const updateMatchBodySlotsMax = 200;
+
+export const UpdateMatchBody = zod.object({
+  name: zod
+    .string()
+    .min(updateMatchBodyNameMin)
+    .max(updateMatchBodyNameMax)
+    .optional(),
+  type: zod.enum(["paid", "free"]).optional(),
+  entryFee: zod
+    .number()
+    .min(updateMatchBodyEntryFeeMin)
+    .max(updateMatchBodyEntryFeeMax)
+    .optional(),
+  prize: zod
+    .number()
+    .min(updateMatchBodyPrizeMin)
+    .max(updateMatchBodyPrizeMax)
+    .optional(),
+  slots: zod
+    .number()
+    .min(updateMatchBodySlotsMin)
+    .max(updateMatchBodySlotsMax)
+    .optional(),
+  startsAt: zod.string().optional(),
+});
+
+export const UpdateMatchResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  type: zod.enum(["paid", "free"]),
+  entryFee: zod.number(),
+  prize: zod.number(),
+  slots: zod.number(),
+  slotsTaken: zod.number(),
+  status: zod.enum(["open", "live", "completed"]),
+  winnerUserId: zod.union([zod.number(), zod.null()]),
+  startsAt: zod.string(),
+  createdAt: zod.string(),
+});
+
+export const DeleteMatchParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteMatchResponse = zod.object({
+  deleted: zod.boolean(),
+});
+
+export const StartMatchParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const StartMatchResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  type: zod.enum(["paid", "free"]),
+  entryFee: zod.number(),
+  prize: zod.number(),
+  slots: zod.number(),
+  slotsTaken: zod.number(),
+  status: zod.enum(["open", "live", "completed"]),
+  winnerUserId: zod.union([zod.number(), zod.null()]),
+  startsAt: zod.string(),
+  createdAt: zod.string(),
+});
+
+export const EndMatchParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const EndMatchResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  type: zod.enum(["paid", "free"]),
+  entryFee: zod.number(),
+  prize: zod.number(),
+  slots: zod.number(),
+  slotsTaken: zod.number(),
+  status: zod.enum(["open", "live", "completed"]),
+  winnerUserId: zod.union([zod.number(), zod.null()]),
+  startsAt: zod.string(),
+  createdAt: zod.string(),
+});
+
+export const getAdminLogsQueryLimitMax = 200;
+
+export const GetAdminLogsQueryParams = zod.object({
+  limit: zod.coerce.number().min(1).max(getAdminLogsQueryLimitMax).optional(),
+});
+
+export const GetAdminLogsResponseItem = zod.object({
+  id: zod.number(),
+  adminUserId: zod.number(),
+  adminUsername: zod.union([zod.string(), zod.null()]),
+  action: zod.string(),
+  targetType: zod.union([zod.string(), zod.null()]),
+  targetId: zod.union([zod.number(), zod.null()]),
+  details: zod.union([zod.string(), zod.null()]),
+  createdAt: zod.string(),
+});
+export const GetAdminLogsResponse = zod.array(GetAdminLogsResponseItem);
