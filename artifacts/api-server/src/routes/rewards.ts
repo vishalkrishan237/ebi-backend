@@ -1,16 +1,11 @@
 import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
 import { db, coinTransactionsTable, matchesTable } from "@workspace/db";
+import { requireAuth } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
-router.get("/rewards", async (req, res): Promise<void> => {
-  const userId = req.session.userId;
-  if (!userId) {
-    res.status(401).json({ error: "Not logged in" });
-    return;
-  }
-
+router.get("/rewards", requireAuth, async (req, res): Promise<void> => {
   const rows = await db
     .select({
       id: coinTransactionsTable.id,
@@ -22,7 +17,7 @@ router.get("/rewards", async (req, res): Promise<void> => {
     })
     .from(coinTransactionsTable)
     .leftJoin(matchesTable, eq(matchesTable.id, coinTransactionsTable.matchId))
-    .where(eq(coinTransactionsTable.userId, userId))
+    .where(eq(coinTransactionsTable.userId, req.userId!))
     .orderBy(desc(coinTransactionsTable.createdAt));
 
   res.json(

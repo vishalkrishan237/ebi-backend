@@ -7,5 +7,6 @@
  */
 
 export interface DeclareWinnerBody {
+  /** @minimum 1 */
   winnerUserId: number;
 }

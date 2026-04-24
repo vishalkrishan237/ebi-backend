@@ -2,25 +2,16 @@ import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
 import {
   db,
-  usersTable,
   matchParticipantsTable,
   matchesTable,
 } from "@workspace/db";
 import { toUserDto } from "../lib/users";
+import { requireAuth } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
-router.get("/profile", async (req, res): Promise<void> => {
-  const userId = req.session.userId;
-  if (!userId) {
-    res.status(401).json({ error: "Not logged in" });
-    return;
-  }
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
-  if (!user) {
-    res.status(404).json({ error: "User not found" });
-    return;
-  }
+router.get("/profile", requireAuth, async (req, res): Promise<void> => {
+  const userId = req.userId!;
 
   const joined = await db
     .select({
@@ -39,7 +30,7 @@ router.get("/profile", async (req, res): Promise<void> => {
     .orderBy(desc(matchParticipantsTable.joinedAt));
 
   res.json({
-    user: toUserDto(user),
+    user: toUserDto(req.user!),
     joinedMatches: joined.map((j) => ({
       id: j.id,
       name: j.name,

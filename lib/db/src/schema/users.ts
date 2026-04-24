@@ -1,4 +1,5 @@
-import { pgTable, serial, text, integer, boolean, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, uniqueIndex, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const usersTable = pgTable(
   "users",
@@ -15,6 +16,7 @@ export const usersTable = pgTable(
   (t) => ({
     emailIdx: uniqueIndex("users_email_idx").on(t.email),
     usernameIdx: uniqueIndex("users_username_idx").on(t.username),
+    coinBalanceCheck: check("users_coin_balance_nonneg", sql`${t.coinBalance} >= 0`),
   }),
 );
 

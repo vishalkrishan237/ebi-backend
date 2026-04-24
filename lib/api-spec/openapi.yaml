@@ -328,22 +328,33 @@ components:
         username:
           type: string
           minLength: 3
+          maxLength: 20
+          pattern: '^[A-Za-z0-9_]+$'
         email:
           type: string
+          format: email
+          maxLength: 254
         freeFireUid:
           type: string
-          minLength: 4
+          minLength: 6
+          maxLength: 15
+          pattern: '^[0-9]+$'
         password:
           type: string
           minLength: 6
+          maxLength: 128
       required: [username, email, freeFireUid, password]
     LoginBody:
       type: object
       properties:
         email:
           type: string
+          format: email
+          maxLength: 254
         password:
           type: string
+          minLength: 1
+          maxLength: 128
       required: [email, password]
     Match:
       type: object
@@ -408,18 +419,23 @@ components:
       properties:
         name:
           type: string
+          minLength: 3
+          maxLength: 80
         type:
           type: string
           enum: [paid, free]
         entryFee:
           type: integer
           minimum: 0
+          maximum: 1000000
         prize:
           type: integer
           minimum: 0
+          maximum: 10000000
         slots:
           type: integer
           minimum: 2
+          maximum: 200
         startsAt:
           type: string
       required: [name, type, entryFee, prize, slots, startsAt]
@@ -428,6 +444,7 @@ components:
       properties:
         winnerUserId:
           type: integer
+          minimum: 1
       required: [winnerUserId]
     JoinResponse:
       type: object
@@ -531,11 +548,14 @@ components:
       properties:
         couponCode:
           type: string
+          maxLength: 64
     PreviewCouponBody:
       type: object
       properties:
         code:
           type: string
+          minLength: 4
+          maxLength: 64
       required: [code]
     CouponPreview:
       type: object
@@ -552,6 +572,8 @@ components:
       properties:
         coinCost:
           type: integer
+          minimum: 1
+          maximum: 100000
       required: [coinCost]
     LeaderboardEntry:
       type: object

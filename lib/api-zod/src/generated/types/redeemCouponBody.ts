@@ -7,5 +7,9 @@
  */
 
 export interface RedeemCouponBody {
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
   coinCost: number;
 }

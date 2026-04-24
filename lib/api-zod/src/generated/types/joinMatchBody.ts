@@ -7,5 +7,6 @@
  */
 
 export interface JoinMatchBody {
+  /** @maxLength 64 */
   couponCode?: string;
 }

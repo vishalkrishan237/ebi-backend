@@ -18,16 +18,31 @@ export const HealthCheckResponse = zod.object({
  * @summary Create a new account
  */
 export const signupBodyUsernameMin = 3;
+export const signupBodyUsernameMax = 20;
 
-export const signupBodyFreeFireUidMin = 4;
+export const signupBodyUsernameRegExp = new RegExp("^[A-Za-z0-9_]+$");
+export const signupBodyEmailMax = 254;
 
+export const signupBodyFreeFireUidMin = 6;
+export const signupBodyFreeFireUidMax = 15;
+
+export const signupBodyFreeFireUidRegExp = new RegExp("^[0-9]+$");
 export const signupBodyPasswordMin = 6;
+export const signupBodyPasswordMax = 128;
 
 export const SignupBody = zod.object({
-  username: zod.string().min(signupBodyUsernameMin),
-  email: zod.string(),
-  freeFireUid: zod.string().min(signupBodyFreeFireUidMin),
-  password: zod.string().min(signupBodyPasswordMin),
+  username: zod
+    .string()
+    .min(signupBodyUsernameMin)
+    .max(signupBodyUsernameMax)
+    .regex(signupBodyUsernameRegExp),
+  email: zod.string().email().max(signupBodyEmailMax),
+  freeFireUid: zod
+    .string()
+    .min(signupBodyFreeFireUidMin)
+    .max(signupBodyFreeFireUidMax)
+    .regex(signupBodyFreeFireUidRegExp),
+  password: zod.string().min(signupBodyPasswordMin).max(signupBodyPasswordMax),
 });
 
 export const SignupResponse = zod.object({
@@ -42,9 +57,13 @@ export const SignupResponse = zod.object({
 /**
  * @summary Login
  */
+export const loginBodyEmailMax = 254;
+
+export const loginBodyPasswordMax = 128;
+
 export const LoginBody = zod.object({
-  email: zod.string(),
-  password: zod.string(),
+  email: zod.string().email().max(loginBodyEmailMax),
+  password: zod.string().min(1).max(loginBodyPasswordMax),
 });
 
 export const LoginResponse = zod.object({
@@ -94,18 +113,27 @@ export const ListMatchesResponse = zod.array(ListMatchesResponseItem);
 /**
  * @summary Create a match (admin)
  */
+export const createMatchBodyNameMin = 3;
+export const createMatchBodyNameMax = 80;
+
 export const createMatchBodyEntryFeeMin = 0;
+export const createMatchBodyEntryFeeMax = 1000000;
 
 export const createMatchBodyPrizeMin = 0;
+export const createMatchBodyPrizeMax = 10000000;
 
 export const createMatchBodySlotsMin = 2;
+export const createMatchBodySlotsMax = 200;
 
 export const CreateMatchBody = zod.object({
-  name: zod.string(),
+  name: zod.string().min(createMatchBodyNameMin).max(createMatchBodyNameMax),
   type: zod.enum(["paid", "free"]),
-  entryFee: zod.number().min(createMatchBodyEntryFeeMin),
-  prize: zod.number().min(createMatchBodyPrizeMin),
-  slots: zod.number().min(createMatchBodySlotsMin),
+  entryFee: zod
+    .number()
+    .min(createMatchBodyEntryFeeMin)
+    .max(createMatchBodyEntryFeeMax),
+  prize: zod.number().min(createMatchBodyPrizeMin).max(createMatchBodyPrizeMax),
+  slots: zod.number().min(createMatchBodySlotsMin).max(createMatchBodySlotsMax),
   startsAt: zod.string(),
 });
 
@@ -160,8 +188,10 @@ export const JoinMatchParams = zod.object({
   id: zod.coerce.number(),
 });
 
+export const joinMatchBodyCouponCodeMax = 64;
+
 export const JoinMatchBody = zod.object({
-  couponCode: zod.string().optional(),
+  couponCode: zod.string().max(joinMatchBodyCouponCodeMax).optional(),
 });
 
 export const JoinMatchResponse = zod.object({
@@ -181,8 +211,14 @@ export const JoinMatchResponse = zod.object({
   coinBalance: zod.number(),
 });
 
+export const previewCouponBodyCodeMin = 4;
+export const previewCouponBodyCodeMax = 64;
+
 export const PreviewCouponBody = zod.object({
-  code: zod.string(),
+  code: zod
+    .string()
+    .min(previewCouponBodyCodeMin)
+    .max(previewCouponBodyCodeMax),
 });
 
 export const PreviewCouponResponse = zod.object({
@@ -196,7 +232,7 @@ export const DeclareWinnerParams = zod.object({
 });
 
 export const DeclareWinnerBody = zod.object({
-  winnerUserId: zod.number(),
+  winnerUserId: zod.number().min(1),
 });
 
 export const DeclareWinnerResponse = zod.object({
@@ -273,8 +309,10 @@ export const GetMyCouponsResponseItem = zod.object({
 });
 export const GetMyCouponsResponse = zod.array(GetMyCouponsResponseItem);
 
+export const redeemCouponBodyCoinCostMax = 100000;
+
 export const RedeemCouponBody = zod.object({
-  coinCost: zod.number(),
+  coinCost: zod.number().min(1).max(redeemCouponBodyCoinCostMax),
 });
 
 export const RedeemCouponResponse = zod.object({

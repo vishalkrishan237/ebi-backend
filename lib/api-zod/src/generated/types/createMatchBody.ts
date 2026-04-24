@@ -8,13 +8,26 @@
 import type { CreateMatchBodyType } from "./createMatchBodyType";
 
 export interface CreateMatchBody {
+  /**
+   * @minLength 3
+   * @maxLength 80
+   */
   name: string;
   type: CreateMatchBodyType;
-  /** @minimum 0 */
+  /**
+   * @minimum 0
+   * @maximum 1000000
+   */
   entryFee: number;
-  /** @minimum 0 */
+  /**
+   * @minimum 0
+   * @maximum 10000000
+   */
   prize: number;
-  /** @minimum 2 */
+  /**
+   * @minimum 2
+   * @maximum 200
+   */
   slots: number;
   startsAt: string;
 }

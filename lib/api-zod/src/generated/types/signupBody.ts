@@ -7,11 +7,23 @@
  */
 
 export interface SignupBody {
-  /** @minLength 3 */
+  /**
+   * @minLength 3
+   * @maxLength 20
+   * @pattern ^[A-Za-z0-9_]+$
+   */
   username: string;
+  /** @maxLength 254 */
   email: string;
-  /** @minLength 4 */
+  /**
+   * @minLength 6
+   * @maxLength 15
+   * @pattern ^[0-9]+$
+   */
   freeFireUid: string;
-  /** @minLength 6 */
+  /**
+   * @minLength 6
+   * @maxLength 128
+   */
   password: string;
 }

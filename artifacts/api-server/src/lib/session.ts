@@ -12,14 +12,18 @@ if (!secret) {
   throw new Error("SESSION_SECRET environment variable is required");
 }
 
+const isProd = process.env["NODE_ENV"] === "production";
+
 export const sessionMiddleware: RequestHandler = session({
+  name: "arena.sid",
   secret,
   resave: false,
   saveUninitialized: false,
+  rolling: true,
   cookie: {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: isProd,
     maxAge: 1000 * 60 * 60 * 24 * 30,
   },
 });

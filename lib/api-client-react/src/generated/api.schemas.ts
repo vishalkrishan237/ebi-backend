@@ -23,17 +23,34 @@ export interface MeResponse {
 }
 
 export interface SignupBody {
-  /** @minLength 3 */
+  /**
+   * @minLength 3
+   * @maxLength 20
+   * @pattern ^[A-Za-z0-9_]+$
+   */
   username: string;
+  /** @maxLength 254 */
   email: string;
-  /** @minLength 4 */
+  /**
+   * @minLength 6
+   * @maxLength 15
+   * @pattern ^[0-9]+$
+   */
   freeFireUid: string;
-  /** @minLength 6 */
+  /**
+   * @minLength 6
+   * @maxLength 128
+   */
   password: string;
 }
 
 export interface LoginBody {
+  /** @maxLength 254 */
   email: string;
+  /**
+   * @minLength 1
+   * @maxLength 128
+   */
   password: string;
 }
 
@@ -87,18 +104,32 @@ export const CreateMatchBodyType = {
 } as const;
 
 export interface CreateMatchBody {
+  /**
+   * @minLength 3
+   * @maxLength 80
+   */
   name: string;
   type: CreateMatchBodyType;
-  /** @minimum 0 */
+  /**
+   * @minimum 0
+   * @maximum 1000000
+   */
   entryFee: number;
-  /** @minimum 0 */
+  /**
+   * @minimum 0
+   * @maximum 10000000
+   */
   prize: number;
-  /** @minimum 2 */
+  /**
+   * @minimum 2
+   * @maximum 200
+   */
   slots: number;
   startsAt: string;
 }
 
 export interface DeclareWinnerBody {
+  /** @minimum 1 */
   winnerUserId: number;
 }
 
@@ -176,10 +207,15 @@ export interface Coupon {
 }
 
 export interface JoinMatchBody {
+  /** @maxLength 64 */
   couponCode?: string;
 }
 
 export interface PreviewCouponBody {
+  /**
+   * @minLength 4
+   * @maxLength 64
+   */
   code: string;
 }
 
@@ -190,6 +226,10 @@ export interface CouponPreview {
 }
 
 export interface RedeemCouponBody {
+  /**
+   * @minimum 1
+   * @maximum 100000
+   */
   coinCost: number;
 }
 

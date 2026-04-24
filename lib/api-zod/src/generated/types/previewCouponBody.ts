@@ -7,5 +7,9 @@
  */
 
 export interface PreviewCouponBody {
+  /**
+   * @minLength 4
+   * @maxLength 64
+   */
   code: string;
 }
