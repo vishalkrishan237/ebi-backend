@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -21,5 +22,20 @@
     "routes/**/*.ts",
     "models/**/*.ts",
     "controllers/**/*.ts"
+=======
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./lib/db"
+    },
+    {
+      "path": "./lib/api-client-react"
+    },
+    {
+      "path": "./lib/api-zod"
+    }
+>>>>>>> 003c94158ac83e7aa8bc095056b137120b89c138
   ]
 }

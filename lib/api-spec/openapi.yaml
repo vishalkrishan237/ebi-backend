@@ -1,0 +1,955 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Arena Esports API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: matches
+  - name: profile
+  - name: rewards
+  - name: admin
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupBody"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "204":
+          description: Logged out
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user (or null when guest)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+  /matches:
+    get:
+      operationId: listMatches
+      tags: [matches]
+      summary: List all matches
+      responses:
+        "200":
+          description: All matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+    post:
+      operationId: createMatch
+      tags: [admin]
+      summary: Create a match (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMatchBody"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /matches/{id}:
+    get:
+      operationId: getMatch
+      tags: [matches]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchDetails"
+  /matches/{id}/join:
+    post:
+      operationId: joinMatch
+      tags: [matches]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinMatchBody"
+      responses:
+        "200":
+          description: Joined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JoinResponse"
+  /coupons/preview:
+    post:
+      operationId: previewCoupon
+      tags: [coupons]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreviewCouponBody"
+      responses:
+        "200":
+          description: Coupon preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CouponPreview"
+  /matches/{id}/declare-winner:
+    post:
+      operationId: declareWinner
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeclareWinnerBody"
+      responses:
+        "200":
+          description: Winner declared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Profile with joined matches
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+  /matches/history:
+    get:
+      operationId: getMatchHistory
+      tags: [matches]
+      summary: List completed matches with winners
+      responses:
+        "200":
+          description: Match history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MatchHistoryEntry"
+  /coupons/options:
+    get:
+      operationId: getCouponOptions
+      tags: [coupons]
+      responses:
+        "200":
+          description: Available coupon bundles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CouponOption"
+  /coupons:
+    get:
+      operationId: getMyCoupons
+      tags: [coupons]
+      responses:
+        "200":
+          description: User redeemed coupons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Coupon"
+  /coupons/redeem:
+    post:
+      operationId: redeemCoupon
+      tags: [coupons]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RedeemCouponBody"
+      responses:
+        "200":
+          description: Redeemed coupon
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Coupon"
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [matches]
+      summary: Top players ranked by tournament wins
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+  /rewards:
+    get:
+      operationId: getRewards
+      tags: [rewards]
+      summary: Coin transaction history
+      responses:
+        "200":
+          description: Coin history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CoinTransaction"
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Dashboard stats and recent activity
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List/search users
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 64
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+  /admin/users/{id}:
+    get:
+      operationId: getAdminUser
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User detail with match history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetail"
+  /admin/users/{id}/ban:
+    post:
+      operationId: banUser
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanUserBody"
+      responses:
+        "200":
+          description: User banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+  /admin/users/{id}/unban:
+    post:
+      operationId: unbanUser
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User unbanned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+  /admin/users/{id}/coins:
+    post:
+      operationId: adjustUserCoins
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustCoinsBody"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+  /admin/matches/{id}:
+    patch:
+      operationId: updateMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMatchBody"
+      responses:
+        "200":
+          description: Updated match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+    delete:
+      operationId: deleteMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /admin/matches/{id}/start:
+    post:
+      operationId: startMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /admin/matches/{id}/end:
+    post:
+      operationId: endMatch
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Match ended without winner (refunds entry fees)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Match"
+  /admin/logs:
+    get:
+      operationId: getAdminLogs
+      tags: [admin]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Recent admin actions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminLog"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        freeFireUid:
+          type: string
+        coinBalance:
+          type: integer
+        isAdmin:
+          type: boolean
+        isBanned:
+          type: boolean
+      required: [id, username, email, freeFireUid, coinBalance, isAdmin, isBanned]
+    MeResponse:
+      type: object
+      properties:
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+      required: [user]
+    SignupBody:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: '^[A-Za-z0-9_]+$'
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        freeFireUid:
+          type: string
+          minLength: 6
+          maxLength: 15
+          pattern: '^[0-9]+$'
+        password:
+          type: string
+          minLength: 6
+          maxLength: 128
+      required: [username, email, freeFireUid, password]
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required: [email, password]
+    Match:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+        prize:
+          type: integer
+        slots:
+          type: integer
+        slotsTaken:
+          type: integer
+        status:
+          type: string
+          enum: [open, live, completed]
+        winnerUserId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        startsAt:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, type, entryFee, prize, slots, slotsTaken, status, winnerUserId, startsAt, createdAt]
+    MatchParticipant:
+      type: object
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        freeFireUid:
+          type: string
+        joinedAt:
+          type: string
+      required: [userId, username, freeFireUid, joinedAt]
+    MatchDetails:
+      allOf:
+        - $ref: "#/components/schemas/Match"
+        - type: object
+          properties:
+            participants:
+              type: array
+              items:
+                $ref: "#/components/schemas/MatchParticipant"
+            joinedByMe:
+              type: boolean
+            winnerUsername:
+              oneOf:
+                - type: string
+                - type: "null"
+          required: [participants, joinedByMe, winnerUsername]
+    CreateMatchBody:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 80
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        prize:
+          type: integer
+          minimum: 0
+          maximum: 10000000
+        slots:
+          type: integer
+          minimum: 2
+          maximum: 200
+        startsAt:
+          type: string
+      required: [name, type, entryFee, prize, slots, startsAt]
+    DeclareWinnerBody:
+      type: object
+      properties:
+        winnerUserId:
+          type: integer
+          minimum: 1
+      required: [winnerUserId]
+    JoinResponse:
+      type: object
+      properties:
+        match:
+          $ref: "#/components/schemas/Match"
+        coinBalance:
+          type: integer
+      required: [match, coinBalance]
+    JoinedMatchSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+        prize:
+          type: integer
+        status:
+          type: string
+          enum: [open, live, completed]
+        wonByMe:
+          type: boolean
+        joinedAt:
+          type: string
+      required: [id, name, type, entryFee, prize, status, wonByMe, joinedAt]
+    Profile:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        joinedMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/JoinedMatchSummary"
+      required: [user, joinedMatches]
+    MatchHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+        prize:
+          type: integer
+        slots:
+          type: integer
+        slotsTaken:
+          type: integer
+        winnerUserId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        winnerUsername:
+          oneOf:
+            - type: string
+            - type: "null"
+        winnerFreeFireUid:
+          oneOf:
+            - type: string
+            - type: "null"
+        startsAt:
+          type: string
+      required: [id, name, type, entryFee, prize, slots, slotsTaken, winnerUserId, winnerUsername, winnerFreeFireUid, startsAt]
+    CouponOption:
+      type: object
+      properties:
+        coinCost:
+          type: integer
+        valueInr:
+          type: integer
+      required: [coinCost, valueInr]
+    Coupon:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        coinCost:
+          type: integer
+        valueInr:
+          type: integer
+        status:
+          type: string
+        createdAt:
+          type: string
+      required: [id, code, coinCost, valueInr, status, createdAt]
+    JoinMatchBody:
+      type: object
+      properties:
+        couponCode:
+          type: string
+          maxLength: 64
+    PreviewCouponBody:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 4
+          maxLength: 64
+      required: [code]
+    CouponPreview:
+      type: object
+      properties:
+        code:
+          type: string
+        valueInr:
+          type: integer
+        status:
+          type: string
+      required: [code, valueInr, status]
+    RedeemCouponBody:
+      type: object
+      properties:
+        coinCost:
+          type: integer
+          minimum: 1
+          maximum: 100000
+      required: [coinCost]
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        freeFireUid:
+          type: string
+        coinBalance:
+          type: integer
+        isAdmin:
+          type: boolean
+        isBanned:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, username, email, freeFireUid, coinBalance, isAdmin, isBanned, createdAt]
+    AdminUserDetail:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AdminUser"
+        joinedMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/JoinedMatchSummary"
+        coinHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoinTransaction"
+      required: [user, joinedMatches, coinHistory]
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalMatches:
+          type: integer
+        activeMatches:
+          type: integer
+        completedMatches:
+          type: integer
+        bannedUsers:
+          type: integer
+        coinsInCirculation:
+          type: integer
+        recentLogs:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminLog"
+      required: [totalUsers, totalMatches, activeMatches, completedMatches, bannedUsers, coinsInCirculation, recentLogs]
+    AdminLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        adminUserId:
+          type: integer
+        adminUsername:
+          oneOf:
+            - type: string
+            - type: "null"
+        action:
+          type: string
+        targetType:
+          oneOf:
+            - type: string
+            - type: "null"
+        targetId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        details:
+          oneOf:
+            - type: string
+            - type: "null"
+        createdAt:
+          type: string
+      required: [id, adminUserId, adminUsername, action, targetType, targetId, details, createdAt]
+    BanUserBody:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 200
+    AdjustCoinsBody:
+      type: object
+      properties:
+        amount:
+          type: integer
+          minimum: -1000000
+          maximum: 1000000
+        reason:
+          type: string
+          minLength: 3
+          maxLength: 200
+      required: [amount, reason]
+    UpdateMatchBody:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 80
+        type:
+          type: string
+          enum: [paid, free]
+        entryFee:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        prize:
+          type: integer
+          minimum: 0
+          maximum: 10000000
+        slots:
+          type: integer
+          minimum: 2
+          maximum: 200
+        startsAt:
+          type: string
+    DeleteResult:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+      required: [deleted]
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        freeFireUid:
+          type: string
+        wins:
+          type: integer
+        totalPrize:
+          type: integer
+        coinBalance:
+          type: integer
+      required: [rank, userId, username, freeFireUid, wins, totalPrize, coinBalance]
+    CoinTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+          description: Positive for earnings, negative for spending
+        reason:
+          type: string
+        matchId:
+          oneOf:
+            - type: integer
+            - type: "null"
+        matchName:
+          oneOf:
+            - type: string
+            - type: "null"
+        createdAt:
+          type: string
+      required: [id, amount, reason, matchId, matchName, createdAt]

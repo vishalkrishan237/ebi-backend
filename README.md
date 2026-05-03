@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Elite Battle India Backend
 
 This folder contains the deployable backend for Elite Battle India.
@@ -96,3 +97,7 @@ npm run migrate
 - `index.js` loads `dist/index.mjs`
 - `dist/index.mjs` comes from `src/index.ts`
 - `src/index.ts` starts the Express app from `src/app.ts`
+=======
+# ebi-backend
+Elite Battle India backend API
+>>>>>>> 003c94158ac83e7aa8bc095056b137120b89c138
