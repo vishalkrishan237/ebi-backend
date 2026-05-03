@@ -11,4 +11,6 @@ if (!existsSync(bundlePath)) {
   );
 }
 
-await import("./dist/index.mjs");
+const { startServer } = await import("./dist/index.mjs");
+
+await startServer();

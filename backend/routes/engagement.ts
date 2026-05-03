@@ -10,9 +10,9 @@ import {
   watchRewardSessionsTable,
   watchRewardVideosTable,
 } from "@workspace/db";
-import { requireAuth } from "../middlewares/auth";
-import { buildAuditContext, logAuditEvent } from "../lib/audit";
-import { postWalletEntry } from "../lib/wallet";
+import { requireAuth } from "../src/middlewares/auth";
+import { buildAuditContext, logAuditEvent } from "../src/lib/audit";
+import { postWalletEntry } from "../src/lib/wallet";
 
 const router: IRouter = Router();
 

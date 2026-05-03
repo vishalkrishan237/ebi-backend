@@ -4,11 +4,11 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, referralRewardsTable, usersTable } from "@workspace/db";
 import { SignupBody, LoginBody } from "@workspace/api-zod";
-import { toUserDto } from "../lib/users";
-import { requireAuth } from "../middlewares/auth";
-import { buildAuditContext, logAuditEvent } from "../lib/audit";
-import { postWalletEntry } from "../lib/wallet";
-import { getIndiaDateStamp } from "../lib/ebi-config";
+import { toUserDto } from "../src/lib/users";
+import { requireAuth } from "../src/middlewares/auth";
+import { buildAuditContext, logAuditEvent } from "../src/lib/audit";
+import { postWalletEntry } from "../src/lib/wallet";
+import { getIndiaDateStamp } from "../src/lib/ebi-config";
 
 const router: IRouter = Router();
 

@@ -17,10 +17,10 @@ import {
   DeclareWinnerParams,
   DeclareWinnerBody,
 } from "@workspace/api-zod";
-import { requireAuth, requireAdmin } from "../middlewares/auth";
-import { buildAuditContext } from "../lib/audit";
-import { postWalletEntry } from "../lib/wallet";
-import { DEFAULT_MATCH_DESCRIPTION } from "../lib/ebi-config";
+import { requireAuth, requireAdmin } from "../src/middlewares/auth";
+import { buildAuditContext } from "../src/lib/audit";
+import { postWalletEntry } from "../src/lib/wallet";
+import { DEFAULT_MATCH_DESCRIPTION } from "../src/lib/ebi-config";
 
 const router: IRouter = Router();
 

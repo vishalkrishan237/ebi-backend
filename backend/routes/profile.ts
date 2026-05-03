@@ -5,8 +5,8 @@ import {
   matchParticipantsTable,
   matchesTable,
 } from "@workspace/db";
-import { toUserDto } from "../lib/users";
-import { requireAuth } from "../middlewares/auth";
+import { toUserDto } from "../src/lib/users";
+import { requireAuth } from "../src/middlewares/auth";
 
 const router: IRouter = Router();
 
