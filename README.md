@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Elite Battle India Backend
 
 This folder contains the deployable backend for Elite Battle India.
@@ -63,16 +62,16 @@ npm run typecheck
 
 ## Deployment
 
-### Render
+### Railway
 
-This folder includes `render.yaml` for Render deployment.
+This folder is intended for backend deployment on Railway.
 
 Recommended steps:
 
-1. Create a new Render Web Service from the backend repository.
-2. Set the root directory to this backend project if needed.
-3. Add the environment variables from `.env` in the Render dashboard.
-4. Deploy using:
+1. Create a new Railway project from this backend repository.
+2. Set the root directory to `ELITE-BATTLE-INDIA/backend` if your project is based on the monorepo root.
+3. Add the environment variables from `.env` in the Railway dashboard.
+4. Set Railway build command to:
 
 ```bash
 npm install && npm run build
@@ -97,7 +96,4 @@ npm run migrate
 - `index.js` loads `dist/index.mjs`
 - `dist/index.mjs` comes from `src/index.ts`
 - `src/index.ts` starts the Express app from `src/app.ts`
-=======
-# ebi-backend
-Elite Battle India backend API
->>>>>>> 003c94158ac83e7aa8bc095056b137120b89c138
+
