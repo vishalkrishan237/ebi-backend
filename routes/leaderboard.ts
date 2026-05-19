@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, sql } from "drizzle-orm";
-import { db, usersTable, matchesTable } from "@workspace/db";
+import { db, usersTable, matchesTable } from "../models/index.js";
 
 const router: IRouter = Router();
 

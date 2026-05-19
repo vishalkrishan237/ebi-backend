@@ -1,5 +1,5 @@
-import { HealthCheckResponse } from "@workspace/api-zod";
-import { pool } from "@workspace/db";
+import { HealthCheckResponse } from "../src/lib/api-zod/index.js";
+import { pool } from "../models/index.js";
 
 export async function getHealthStatus() {
   await pool.query("select 1");

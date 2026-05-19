@@ -9,7 +9,7 @@ import {
   walletEntriesTable,
   watchRewardSessionsTable,
   watchRewardVideosTable,
-} from "@workspace/db";
+} from "../models/index.js";
 import { requireAuth } from "../src/middlewares/auth.js";
 import { buildAuditContext, logAuditEvent } from "../src/lib/audit.js";
 import { postWalletEntry } from "../src/lib/wallet.js";

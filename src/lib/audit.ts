@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Request } from "express";
-import { auditEventsTable, db } from "@workspace/db";
+import { auditEventsTable, db } from "../../models/index.js";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0] | typeof db;
 

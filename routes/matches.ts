@@ -9,14 +9,14 @@ import {
   matchSquadsTable,
   matchSquadMembersTable,
   usersTable,
-} from "@workspace/db";
+} from "../models/index.js";
 import {
   CreateMatchBody,
   GetMatchParams,
   JoinMatchParams,
   DeclareWinnerParams,
   DeclareWinnerBody,
-} from "@workspace/api-zod";
+} from "../src/lib/api-zod/index.js";
 import { requireAuth, requireAdmin } from "../src/middlewares/auth.js";
 import { buildAuditContext } from "../src/lib/audit.js";
 import { postWalletEntry } from "../src/lib/wallet.js";

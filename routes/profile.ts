@@ -4,7 +4,7 @@ import {
   db,
   matchParticipantsTable,
   matchesTable,
-} from "@workspace/db";
+} from "../models/index.js";
 import { toUserDto } from "../src/lib/users.js";
 import { requireAuth } from "../src/middlewares/auth.js";
 

@@ -1,4 +1,4 @@
-import type { UserRow } from "@workspace/db";
+import type { UserRow } from "../../models/index.js";
 
 export function toUserDto(u: UserRow) {
   return {

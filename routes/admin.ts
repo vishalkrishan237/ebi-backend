@@ -7,7 +7,7 @@ import {
   matchParticipantsTable,
   adminLogsTable,
   walletEntriesTable,
-} from "@workspace/db";
+} from "../models/index.js";
 import {
   GetAdminUserParams,
   BanUserParams,
@@ -22,7 +22,7 @@ import {
   EndMatchParams,
   ListAdminUsersQueryParams as ListAdminUsersParams,
   GetAdminLogsQueryParams as GetAdminLogsParams,
-} from "@workspace/api-zod";
+} from "../src/lib/api-zod/index.js";
 import { requireAdmin } from "../src/middlewares/auth.js";
 import { buildAuditContext } from "../src/lib/audit.js";
 import { postWalletEntry } from "../src/lib/wallet.js";

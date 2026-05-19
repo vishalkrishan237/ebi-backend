@@ -4,8 +4,8 @@ import { eq, desc } from "drizzle-orm";
 import {
   db,
   couponsTable,
-} from "@workspace/db";
-import { RedeemCouponBody, PreviewCouponBody } from "@workspace/api-zod";
+} from "../models/index.js";
+import { RedeemCouponBody, PreviewCouponBody } from "../src/lib/api-zod/index.js";
 import { requireAuth } from "../src/middlewares/auth.js";
 import { buildAuditContext } from "../src/lib/audit.js";
 import { postWalletEntry } from "../src/lib/wallet.js";

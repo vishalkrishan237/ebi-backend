@@ -1,7 +1,7 @@
 import app from "./app.js";
 import type { Server } from "node:http";
 import { logger } from "./lib/logger.js";
-import { ensureDatabaseReady, pool } from "@workspace/db";
+import { ensureDatabaseReady, pool } from "../models/index.js";
 import { initializeSessionStore } from "./lib/session.js";
 
 export async function startServer(): Promise<void> {

@@ -1,5 +1,5 @@
 import session from "express-session";
-import { pool } from "@workspace/db";
+import { pool } from "../../models/index.js";
 
 type SessionRecord = {
   sess: session.SessionData;

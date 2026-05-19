@@ -3,7 +3,7 @@ import {
   walletEntriesTable,
   usersTable,
   db,
-} from "@workspace/db";
+} from "../../models/index.js";
 import type { AuditContext } from "./audit.js";
 import { logAuditEvent } from "./audit.js";
 
