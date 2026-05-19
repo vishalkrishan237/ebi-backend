@@ -1,6 +1,7 @@
 import app from "./app";
+import type { Server } from "node:http";
 import { logger } from "./lib/logger";
-import { ensureDatabaseReady } from "@workspace/db";
+import { ensureDatabaseReady, pool } from "@workspace/db";
 import { initializeSessionStore } from "./lib/session";
 
 export async function startServer(): Promise<void> {
@@ -14,8 +15,8 @@ export async function startServer(): Promise<void> {
   await ensureDatabaseReady();
   await initializeSessionStore();
 
-  await new Promise<void>((resolve, reject) => {
-    app.listen(port, (err) => {
+  const server = await new Promise<Server>((resolve, reject) => {
+    const nextServer = app.listen(port, (err) => {
       if (err) {
         logger.error({ err }, "Error listening on port");
         reject(err);
@@ -23,7 +24,43 @@ export async function startServer(): Promise<void> {
       }
 
       logger.info({ port }, "Server listening");
-      resolve();
+      resolve(nextServer);
     });
+  });
+
+  let shuttingDown = false;
+
+  const shutdown = async (signal: NodeJS.Signals) => {
+    if (shuttingDown) {
+      return;
+    }
+
+    shuttingDown = true;
+    logger.info({ signal }, "Shutting down server");
+
+    await new Promise<void>((resolve) => {
+      server.close((err) => {
+        if (err) {
+          logger.error({ err, signal }, "Error while closing HTTP server");
+        }
+        resolve();
+      });
+    });
+
+    try {
+      await pool.end();
+    } catch (err) {
+      logger.error({ err, signal }, "Error while closing database pool");
+    }
+
+    process.exit(0);
+  };
+
+  process.once("SIGINT", () => {
+    void shutdown("SIGINT");
+  });
+
+  process.once("SIGTERM", () => {
+    void shutdown("SIGTERM");
   });
 }

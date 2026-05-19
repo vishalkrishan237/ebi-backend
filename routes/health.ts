@@ -3,9 +3,13 @@ import { getHealthStatus } from "../controllers/health-controller";
 
 const router: IRouter = Router();
 
-router.get("/healthz", (_req, res) => {
-  const data = getHealthStatus();
-  res.json(data);
+router.get("/healthz", async (_req, res) => {
+  try {
+    const data = await getHealthStatus();
+    res.json(data);
+  } catch {
+    res.status(503).json({ status: "degraded" });
+  }
 });
 
 export default router;

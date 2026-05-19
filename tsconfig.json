@@ -7,7 +7,7 @@
     "rootDir": ".",
     "types": ["node"],
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@workspace/db": ["./models/index.ts"],
       "@workspace/api-zod": ["./src/lib/api-zod/index.ts"]
