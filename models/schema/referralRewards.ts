@@ -1,6 +1,6 @@
 import { pgTable, serial, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import { usersTable } from "./users";
-import { walletEntriesTable } from "./walletEntries";
+import { usersTable } from "./users.js";
+import { walletEntriesTable } from "./walletEntries.js";
 
 export const referralRewardsTable = pgTable(
   "referral_rewards",

@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import * as schema from "./schema";
-import { logger } from "../src/lib/logger";
+import * as schema from "./schema/index.js";
+import { logger } from "../src/lib/logger.js";
 
 const { Pool } = pg;
 
@@ -73,4 +73,4 @@ export async function ensureDatabaseReady(): Promise<void> {
   );
 }
 
-export * from "./schema";
+export * from "./schema/index.js";

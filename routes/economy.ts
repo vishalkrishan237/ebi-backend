@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { COIN_PACKAGES } from "../src/lib/ebi-config";
+import { COIN_PACKAGES } from "../src/lib/ebi-config.js";
 
 const router: IRouter = Router();
 

@@ -1,8 +1,8 @@
-import app from "./app";
+import app from "./app.js";
 import type { Server } from "node:http";
-import { logger } from "./lib/logger";
+import { logger } from "./lib/logger.js";
 import { ensureDatabaseReady, pool } from "@workspace/db";
-import { initializeSessionStore } from "./lib/session";
+import { initializeSessionStore } from "./lib/session.js";
 
 export async function startServer(): Promise<void> {
   const rawPort = process.env["PORT"] ?? "8081";

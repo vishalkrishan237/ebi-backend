@@ -4,8 +4,8 @@ import {
   usersTable,
   db,
 } from "@workspace/db";
-import type { AuditContext } from "./audit";
-import { logAuditEvent } from "./audit";
+import type { AuditContext } from "./audit.js";
+import { logAuditEvent } from "./audit.js";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 

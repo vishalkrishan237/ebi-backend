@@ -1,7 +1,7 @@
 import { pgTable, serial, integer, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import { usersTable } from "./users";
-import { watchRewardVideosTable } from "./watchRewardVideos";
-import { walletEntriesTable } from "./walletEntries";
+import { usersTable } from "./users.js";
+import { watchRewardVideosTable } from "./watchRewardVideos.js";
+import { walletEntriesTable } from "./walletEntries.js";
 
 export const watchRewardSessionsTable = pgTable(
   "watch_reward_sessions",

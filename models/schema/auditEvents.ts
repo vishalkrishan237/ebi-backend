@@ -1,5 +1,5 @@
 import { pgTable, serial, integer, text, timestamp, jsonb, index } from "drizzle-orm/pg-core";
-import { usersTable } from "./users";
+import { usersTable } from "./users.js";
 
 export const auditEventsTable = pgTable(
   "audit_events",

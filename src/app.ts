@@ -4,10 +4,10 @@ import pinoHttp from "pino-http";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import router from "../routes";
-import { logger } from "./lib/logger";
-import { sessionMiddleware } from "./lib/session";
-import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
+import router from "../routes/index.js";
+import { logger } from "./lib/logger.js";
+import { sessionMiddleware } from "./lib/session.js";
+import { errorHandler, notFoundHandler } from "./middlewares/error-handler.js";
 
 const app: Express = express();
 const __filename = fileURLToPath(import.meta.url);

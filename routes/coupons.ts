@@ -6,9 +6,9 @@ import {
   couponsTable,
 } from "@workspace/db";
 import { RedeemCouponBody, PreviewCouponBody } from "@workspace/api-zod";
-import { requireAuth } from "../src/middlewares/auth";
-import { buildAuditContext } from "../src/lib/audit";
-import { postWalletEntry } from "../src/lib/wallet";
+import { requireAuth } from "../src/middlewares/auth.js";
+import { buildAuditContext } from "../src/lib/audit.js";
+import { postWalletEntry } from "../src/lib/wallet.js";
 
 const router: IRouter = Router();
 

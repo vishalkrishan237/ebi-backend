@@ -1,6 +1,6 @@
 import { pgEnum, pgTable, serial, integer, text, timestamp, jsonb, uniqueIndex, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { usersTable } from "./users";
+import { usersTable } from "./users.js";
 
 export const walletEntryDirectionEnum = pgEnum("wallet_entry_direction", [
   "credit",

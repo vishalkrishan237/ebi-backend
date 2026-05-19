@@ -1,6 +1,6 @@
 import { pgTable, serial, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
-import { matchesTable } from "./matches";
-import { usersTable } from "./users";
+import { matchesTable } from "./matches.js";
+import { usersTable } from "./users.js";
 
 export const matchParticipantsTable = pgTable(
   "match_participants",

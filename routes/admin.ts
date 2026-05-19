@@ -23,10 +23,10 @@ import {
   ListAdminUsersQueryParams as ListAdminUsersParams,
   GetAdminLogsQueryParams as GetAdminLogsParams,
 } from "@workspace/api-zod";
-import { requireAdmin } from "../src/middlewares/auth";
-import { buildAuditContext } from "../src/lib/audit";
-import { postWalletEntry } from "../src/lib/wallet";
-import { COIN_PACKAGES, OFFICIAL_EBI_MATCHES } from "../src/lib/ebi-config";
+import { requireAdmin } from "../src/middlewares/auth.js";
+import { buildAuditContext } from "../src/lib/audit.js";
+import { postWalletEntry } from "../src/lib/wallet.js";
+import { COIN_PACKAGES, OFFICIAL_EBI_MATCHES } from "../src/lib/ebi-config.js";
 
 const router: IRouter = Router();
 

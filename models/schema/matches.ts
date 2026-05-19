@@ -1,5 +1,5 @@
 import { pgTable, serial, text, integer, timestamp, boolean } from "drizzle-orm/pg-core";
-import { usersTable } from "./users";
+import { usersTable } from "./users.js";
 
 export const matchesTable = pgTable("matches", {
   id: serial("id").primaryKey(),

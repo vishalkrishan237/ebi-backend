@@ -1,7 +1,7 @@
 import session from "express-session";
 import type { RequestHandler } from "express";
 import { pool } from "@workspace/db";
-import { PgSessionStore } from "./session-store";
+import { PgSessionStore } from "./session-store.js";
 
 declare module "express-session" {
   interface SessionData {
