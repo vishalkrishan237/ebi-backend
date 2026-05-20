@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { randomBytes } from "node:crypto";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import {
   db,
@@ -26,10 +26,7 @@ const router: IRouter = Router();
 
 const RegisterSquadBody = z.object({
   teamName: z.string().trim().min(3).max(40),
-});
-
-const JoinSquadBody = z.object({
-  inviteCode: z.string().trim().min(8).max(64),
+  teammateUids: z.array(z.string().trim().min(6).max(15).regex(/^[0-9]+$/)).length(3),
 });
 
 function serializeMatch(m: typeof matchesTable.$inferSelect) {
@@ -275,7 +272,7 @@ router.post("/matches/:id/join", requireAuth, async (req, res): Promise<void> =>
         return {
           ok: false as const,
           status: 400,
-          error: "This squad match requires captain registration and invite links",
+          error: "This squad match requires captain registration with teammate UIDs",
         };
       }
 
@@ -438,6 +435,86 @@ router.post("/matches/:id/squad/register", requireAuth, async (req, res): Promis
         return { ok: false as const, status: 400, error: "Not enough coins" };
       }
 
+      const teammateUids = body.data.teammateUids.map((value) => value.trim());
+      if (new Set(teammateUids).size !== teammateUids.length) {
+        return { ok: false as const, status: 400, error: "Each teammate UID must be unique" };
+      }
+
+      if (teammateUids.includes(user.freeFireUid)) {
+        return {
+          ok: false as const,
+          status: 400,
+          error: "Do not enter the captain UID in teammate slots",
+        };
+      }
+
+      const teammateRows = await tx
+        .select()
+        .from(usersTable)
+        .where(inArray(usersTable.freeFireUid, teammateUids));
+
+      if (teammateRows.length !== teammateUids.length) {
+        const foundUids = new Set(teammateRows.map((row) => row.freeFireUid));
+        const missingUid = teammateUids.find((uid) => !foundUids.has(uid));
+        return {
+          ok: false as const,
+          status: 400,
+          error: `Player with UID ${missingUid} has not signed up yet`,
+        };
+      }
+
+      const bannedTeammate = teammateRows.find((row) => row.isBanned);
+      if (bannedTeammate) {
+        return {
+          ok: false as const,
+          status: 400,
+          error: `${bannedTeammate.username} is banned and cannot join this squad`,
+        };
+      }
+
+      const teammateByUid = new Map(teammateRows.map((row) => [row.freeFireUid, row]));
+      const orderedTeammates = teammateUids.map((uid) => teammateByUid.get(uid)!);
+      const teammateIds = orderedTeammates.map((row) => row.id);
+      const fullSquadUsers = [user, ...orderedTeammates];
+      const fullSquadUserIds = fullSquadUsers.map((row) => row.id);
+
+      const existingTeammateEntries = await tx
+        .select({
+          userId: matchParticipantsTable.userId,
+          username: usersTable.username,
+        })
+        .from(matchParticipantsTable)
+        .innerJoin(usersTable, eq(usersTable.id, matchParticipantsTable.userId))
+        .where(
+          and(
+            eq(matchParticipantsTable.matchId, match.id),
+            inArray(matchParticipantsTable.userId, teammateIds),
+          ),
+        );
+
+      if (existingTeammateEntries.length > 0) {
+        return {
+          ok: false as const,
+          status: 400,
+          error: `${existingTeammateEntries[0]!.username} is already registered in this match`,
+        };
+      }
+
+      const existingSquadMembers = await tx
+        .select({ userId: matchSquadMembersTable.userId })
+        .from(matchSquadMembersTable)
+        .where(inArray(matchSquadMembersTable.userId, fullSquadUserIds));
+
+      if (existingSquadMembers.length > 0) {
+        const alreadyLockedId = existingSquadMembers[0]!.userId;
+        const alreadyLockedUser = fullSquadUsers.find((member) => member.id === alreadyLockedId);
+        return {
+          ok: false as const,
+          status: 400,
+          error: `${alreadyLockedUser?.username ?? "A player"} is already locked in another squad`,
+        };
+      }
+
       await postWalletEntry(tx, auditContext, {
         userId: user.id,
         direction: "debit",
@@ -465,23 +542,46 @@ router.post("/matches/:id/squad/register", requireAuth, async (req, res): Promis
         matchId: match.id,
         userId: user.id,
       });
+      await tx.insert(matchParticipantsTable).values(
+        orderedTeammates.map((teammate) => ({
+          matchId: match.id,
+          userId: teammate.id,
+        })),
+      );
       await tx.insert(matchSquadMembersTable).values({
         squadId: squad!.id,
         userId: user.id,
       });
+      await tx.insert(matchSquadMembersTable).values(
+        orderedTeammates.map((teammate) => ({
+          squadId: squad!.id,
+          userId: teammate.id,
+        })),
+      );
 
       const [updatedMatch] = await tx
         .update(matchesTable)
-        .set({ slotsTaken: match.slotsTaken + 1 })
+        .set({ slotsTaken: match.slotsTaken + 1 + orderedTeammates.length })
         .where(eq(matchesTable.id, match.id))
         .returning();
 
       return {
         ok: true as const,
         squadId: squad!.id,
-        inviteCode,
         teamName: squad!.teamName,
         side: squad!.side,
+        members: [
+          {
+            userId: user.id,
+            username: user.username,
+            freeFireUid: user.freeFireUid,
+          },
+          ...orderedTeammates.map((teammate) => ({
+            userId: teammate.id,
+            username: teammate.username,
+            freeFireUid: teammate.freeFireUid,
+          })),
+        ],
         match: serializeMatch(updatedMatch!),
       };
     });
@@ -493,7 +593,6 @@ router.post("/matches/:id/squad/register", requireAuth, async (req, res): Promis
 
     res.json({
       ...result,
-      inviteUrl: `${req.protocol}://${req.get("host")}/matches/${params.data.id}?invite=${result.inviteCode}`,
     });
   } catch (err) {
     if (err instanceof Error && err.message === "Insufficient wallet balance") {
@@ -505,97 +604,9 @@ router.post("/matches/:id/squad/register", requireAuth, async (req, res): Promis
 });
 
 router.post("/matches/:id/squad/join", requireAuth, async (req, res): Promise<void> => {
-  const params = GetMatchParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
-
-  const body = JoinSquadBody.safeParse(req.body);
-  if (!body.success) {
-    res.status(400).json({ error: body.error.message });
-    return;
-  }
-
-  const result = await db.transaction(async (tx) => {
-    const [match] = await tx
-      .select()
-      .from(matchesTable)
-      .where(eq(matchesTable.id, params.data.id))
-      .for("update");
-
-    if (!match) return { ok: false as const, status: 404, error: "Match not found" };
-    if (match.status !== "open") return { ok: false as const, status: 400, error: "Match is closed" };
-    if (match.mode !== "squad" || !match.isCaptainEntryOnly) {
-      return { ok: false as const, status: 400, error: "This match does not use squad invites" };
-    }
-
-    const [squad] = await tx
-      .select()
-      .from(matchSquadsTable)
-      .where(
-        and(
-          eq(matchSquadsTable.matchId, match.id),
-          eq(matchSquadsTable.inviteCode, body.data.inviteCode),
-        ),
-      )
-      .for("update");
-
-    if (!squad) return { ok: false as const, status: 404, error: "Invite link is invalid" };
-
-    const existingUserEntry = await tx
-      .select({ id: matchParticipantsTable.id })
-      .from(matchParticipantsTable)
-      .where(
-        and(
-          eq(matchParticipantsTable.matchId, match.id),
-          eq(matchParticipantsTable.userId, req.userId!),
-        ),
-      )
-      .limit(1);
-    if (existingUserEntry.length > 0) {
-      return { ok: false as const, status: 400, error: "You are already registered for this match" };
-    }
-
-    const squadMembers = await tx
-      .select({ id: matchSquadMembersTable.id })
-      .from(matchSquadMembersTable)
-      .where(eq(matchSquadMembersTable.squadId, squad.id));
-    if (squadMembers.length >= match.teamSize) {
-      return { ok: false as const, status: 400, error: "This squad is already full" };
-    }
-
-    if (match.slotsTaken >= match.slots) {
-      return { ok: false as const, status: 400, error: "Match is full" };
-    }
-
-    await tx.insert(matchParticipantsTable).values({
-      matchId: match.id,
-      userId: req.userId!,
-    });
-    await tx.insert(matchSquadMembersTable).values({
-      squadId: squad.id,
-      userId: req.userId!,
-    });
-
-    const [updatedMatch] = await tx
-      .update(matchesTable)
-      .set({
-        slotsTaken: match.slotsTaken + 1,
-        ...(match.slotsTaken + 1 >= match.slots ? { status: "live" as const } : {}),
-      })
-      .where(eq(matchesTable.id, match.id))
-      .returning();
-
-    return { ok: true as const, match: serializeMatch(updatedMatch!) };
+  res.status(400).json({
+    error: "Squad invite links are disabled. Captain must register the full squad with teammate UIDs.",
   });
-
-  if (!result.ok) {
-    res.status(result.status).json({ error: result.error });
-    return;
-  }
-
-  res.json(result);
 });
 
 router.post(
